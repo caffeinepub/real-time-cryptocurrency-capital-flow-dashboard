@@ -1,0 +1,104 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Rollback to stable Binance-only frontend and remove CoinGecko references",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Remove CoinGecko from frontend runtime and restore Binance-only (WebSocket + REST fallback) with existing synthetic fallbacks.",
+      "acceptanceCriteria": [
+        "The codebase contains no runtime calls to CoinGecko endpoints and no CoinGecko-specific services/hooks are used anywhere in the frontend.",
+        "Any CoinGecko-related configuration variables are removed from the app runtime/config and are not required to run or build the project.",
+        "All dashboards/modules load successfully and continue to display live market data using Binance-only sources (WebSocket + REST fallback) and existing synthetic data behavior where applicable.",
+        "No user-facing UI text mentions CoinGecko; any user-facing text introduced/updated by this change is in English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Audit and remove any CoinGecko-related imports, code paths, or fallbacks (services/hooks/utilities) and ensure all enrich/fallback logic uses only Binance live data via useBinanceData plus existing synthetic behaviors."
+        },
+        {
+          "path": "frontend/src/hooks/useBinanceData.ts",
+          "operation": "modify",
+          "description": "Confirm Binance-only behavior by removing any CoinGecko fallback branches (if present) and ensuring the data pipeline is strictly Binance WebSocket with REST polling fallback."
+        },
+        {
+          "path": "frontend/src/lib/binanceService.ts",
+          "operation": "modify",
+          "description": "Ensure all market-data base URLs and REST fallback logic are Binance-only, and remove any CoinGecko-related constants/configuration (if present)."
+        },
+        {
+          "path": "frontend/src/lib/coingeckoService.ts",
+          "operation": "delete",
+          "description": "Delete CoinGecko service module (if present) to ensure no CoinGecko runtime calls remain."
+        },
+        {
+          "path": "frontend/src/hooks/useCoinGeckoData.ts",
+          "operation": "delete",
+          "description": "Delete any CoinGecko-specific hook (if present) to prevent CoinGecko usage in the frontend."
+        },
+        {
+          "path": "frontend/src/lib/coingecko.ts",
+          "operation": "delete",
+          "description": "Delete any CoinGecko utility module (if present) used for URL building, symbol mapping, or fallback logic."
+        },
+        {
+          "path": "frontend/src/lib/marketDataProvider.ts",
+          "operation": "create",
+          "description": "Create a single Binance-only market data provider facade used by the app to centralize and constrain provider usage to Binance (no provider switching)."
+        },
+        {
+          "path": "frontend/src/components/FlowVisualization.tsx",
+          "operation": "modify",
+          "description": "Remove any CoinGecko-dependent UI behavior (if present) and ensure flow rendering continues using backend data + Binance-only live/synthetic fallback. If any CoinGecko text exists, remove it and ensure replacements are in English."
+        },
+        {
+          "path": "frontend/src/components/PredictiveIntelligence.tsx",
+          "operation": "modify",
+          "description": "Remove any CoinGecko-dependent UI behavior (if present) and ensure projections continue using backend data and Binance-only synthetic projections. If any CoinGecko text exists, remove it and ensure replacements are in English."
+        },
+        {
+          "path": "frontend/src/components/ConfluenceZones.tsx",
+          "operation": "modify",
+          "description": "Remove any CoinGecko-dependent UI behavior (if present) and ensure zones continue using backend data + Binance-only synthetic fallback. If any CoinGecko text exists, remove it and ensure replacements are in English."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Make the Binance-only rollback the default stable baseline with CoinGecko fully removed (no hidden switches or dead code).",
+      "acceptanceCriteria": [
+        "There is no optional/hidden switch that re-enables CoinGecko; the application operates as Binance-only by default.",
+        "The application builds successfully without any CoinGecko-related modules, imports, or config."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/package.json",
+          "operation": "modify",
+          "description": "Remove CoinGecko-related frontend dependencies and scripts (if present) so the frontend builds without any CoinGecko modules."
+        },
+        {
+          "path": "frontend/.env",
+          "operation": "modify",
+          "description": "Remove any CoinGecko-related environment variables from the frontend runtime configuration (if present)."
+        },
+        {
+          "path": "frontend/.env.example",
+          "operation": "modify",
+          "description": "Remove any CoinGecko-related environment variable documentation (if present) so no CoinGecko config is implied or required."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure no provider-selection or feature-flag logic references CoinGecko (if present), and confirm the default behavior is Binance-only."
+        },
+        {
+          "path": "frontend/src/lib/marketDataProvider.ts",
+          "operation": "modify",
+          "description": "Lock the provider facade to Binance-only exports and remove/avoid any provider toggle or fallback-to-CoinGecko option to prevent dead/hidden code paths."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,266 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --radius: 0.75rem;
+        --background: 0.08 0 0;
+        --foreground: 0.98 0 0;
+        --card: 0.12 0 0;
+        --card-foreground: 0.98 0 0;
+        --popover: 0.12 0 0;
+        --popover-foreground: 0.98 0 0;
+        --primary: 0.75 0.25 195;
+        --primary-foreground: 0.98 0 0;
+        --secondary: 0.18 0 0;
+        --secondary-foreground: 0.98 0 0;
+        --muted: 0.18 0 0;
+        --muted-foreground: 0.60 0 0;
+        --accent: 0.22 0 0;
+        --accent-foreground: 0.98 0 0;
+        --destructive: 0.65 0.28 15;
+        --destructive-foreground: 0.98 0 0;
+        --border: 1 0 0 / 10%;
+        --input: 1 0 0 / 15%;
+        --ring: 0.75 0.25 195;
+        
+        /* Neon colors for dark tech theme */
+        --neon-cyan: 0.75 0.25 195;
+        --neon-blue: 0.65 0.28 250;
+        --neon-green: 0.75 0.25 145;
+        --neon-purple: 0.65 0.28 290;
+        --neon-pink: 0.70 0.30 350;
+        --neon-yellow: 0.80 0.22 85;
+    }
+
+    .dark {
+        --background: 0.08 0 0;
+        --foreground: 0.98 0 0;
+        --card: 0.12 0 0;
+        --card-foreground: 0.98 0 0;
+        --popover: 0.15 0 0;
+        --popover-foreground: 0.98 0 0;
+        --primary: 0.75 0.25 195;
+        --primary-foreground: 0.08 0 0;
+        --secondary: 0.18 0 0;
+        --secondary-foreground: 0.98 0 0;
+        --muted: 0.18 0 0;
+        --muted-foreground: 0.60 0 0;
+        --accent: 0.22 0 0;
+        --accent-foreground: 0.98 0 0;
+        --destructive: 0.65 0.28 15;
+        --destructive-foreground: 0.98 0 0;
+        --border: 1 0 0 / 10%;
+        --input: 1 0 0 / 15%;
+        --ring: 0.75 0.25 195;
+    }
+
+    * {
+        @apply border-border;
+    }
+    
+    body {
+        @apply bg-background text-foreground;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    }
+
+    /* Futuristic font import */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+}
+
+@layer utilities {
+    /* Neon text colors */
+    .text-neon-cyan {
+        color: oklch(var(--neon-cyan));
+    }
+    .text-neon-blue {
+        color: oklch(var(--neon-blue));
+    }
+    .text-neon-green {
+        color: oklch(var(--neon-green));
+    }
+    .text-neon-purple {
+        color: oklch(var(--neon-purple));
+    }
+    .text-neon-pink {
+        color: oklch(var(--neon-pink));
+    }
+    .text-neon-yellow {
+        color: oklch(var(--neon-yellow));
+    }
+
+    /* Neon background colors */
+    .bg-neon-cyan {
+        background-color: oklch(var(--neon-cyan));
+    }
+    .bg-neon-blue {
+        background-color: oklch(var(--neon-blue));
+    }
+    .bg-neon-green {
+        background-color: oklch(var(--neon-green));
+    }
+    .bg-neon-purple {
+        background-color: oklch(var(--neon-purple));
+    }
+    .bg-neon-pink {
+        background-color: oklch(var(--neon-pink));
+    }
+    .bg-neon-yellow {
+        background-color: oklch(var(--neon-yellow));
+    }
+
+    /* Neon border colors */
+    .border-neon-cyan {
+        border-color: oklch(var(--neon-cyan));
+    }
+    .border-neon-blue {
+        border-color: oklch(var(--neon-blue));
+    }
+    .border-neon-green {
+        border-color: oklch(var(--neon-green));
+    }
+    .border-neon-purple {
+        border-color: oklch(var(--neon-purple));
+    }
+    .border-neon-pink {
+        border-color: oklch(var(--neon-pink));
+    }
+    .border-neon-yellow {
+        border-color: oklch(var(--neon-yellow));
+    }
+
+    /* Neon glow shadows */
+    .shadow-neon-cyan {
+        box-shadow: 0 0 20px oklch(var(--neon-cyan) / 0.5), 0 0 40px oklch(var(--neon-cyan) / 0.3);
+    }
+    .shadow-neon-cyan-sm {
+        box-shadow: 0 0 10px oklch(var(--neon-cyan) / 0.4), 0 0 20px oklch(var(--neon-cyan) / 0.2);
+    }
+    .shadow-neon-blue {
+        box-shadow: 0 0 20px oklch(var(--neon-blue) / 0.5), 0 0 40px oklch(var(--neon-blue) / 0.3);
+    }
+    .shadow-neon-blue-sm {
+        box-shadow: 0 0 10px oklch(var(--neon-blue) / 0.4), 0 0 20px oklch(var(--neon-blue) / 0.2);
+    }
+    .shadow-neon-green {
+        box-shadow: 0 0 20px oklch(var(--neon-green) / 0.5), 0 0 40px oklch(var(--neon-green) / 0.3);
+    }
+    .shadow-neon-green-sm {
+        box-shadow: 0 0 10px oklch(var(--neon-green) / 0.4), 0 0 20px oklch(var(--neon-green) / 0.2);
+    }
+    .shadow-neon-purple-sm {
+        box-shadow: 0 0 10px oklch(var(--neon-purple) / 0.4), 0 0 20px oklch(var(--neon-purple) / 0.2);
+    }
+    .shadow-neon-yellow {
+        box-shadow: 0 0 20px oklch(var(--neon-yellow) / 0.5), 0 0 40px oklch(var(--neon-yellow) / 0.3);
+    }
+    .shadow-neon-yellow-sm {
+        box-shadow: 0 0 10px oklch(var(--neon-yellow) / 0.4), 0 0 20px oklch(var(--neon-yellow) / 0.2);
+    }
+
+    /* Fill colors for icons */
+    .fill-neon-pink {
+        fill: oklch(var(--neon-pink));
+    }
+
+    /* Custom animations */
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes pulse-slow {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    @keyframes gentle-pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.85;
+            transform: scale(1.02);
+        }
+    }
+
+    @keyframes radar-sweep {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes flow-pulse {
+        0%, 100% {
+            opacity: 0.6;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+
+    .animate-pulse-slow {
+        animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .animate-gentle-pulse {
+        animation: gentle-pulse 2s ease-in-out infinite;
+    }
+
+    .animate-radar-sweep {
+        animation: radar-sweep 4s linear infinite;
+    }
+
+    .animate-flow-pulse {
+        animation: flow-pulse 2s ease-in-out infinite;
+    }
+
+    /* Gradient backgrounds */
+    .bg-gradient-neon {
+        background: linear-gradient(135deg, oklch(var(--neon-cyan) / 0.1) 0%, oklch(var(--neon-blue) / 0.1) 50%, oklch(var(--neon-purple) / 0.1) 100%);
+    }
+
+    .bg-gradient-radar {
+        background: radial-gradient(circle at center, oklch(var(--neon-yellow) / 0.1) 0%, oklch(var(--neon-cyan) / 0.05) 50%, transparent 100%);
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: oklch(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+    background: oklch(var(--neon-cyan) / 0.3);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: oklch(var(--neon-cyan) / 0.5);
+}

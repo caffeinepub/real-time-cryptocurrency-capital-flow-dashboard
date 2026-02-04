@@ -1,0 +1,60 @@
+{
+  "kind": "build_request",
+  "title": "Rollback to last stable Binance-only build and remove CoinGecko entirely",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Completely remove any CoinGecko dependency from the project and restore the application to the last stable Binance-only behavior. This includes removing all CoinGecko-related code paths (services, hooks, utilities, fallbacks), configuration (env vars, constants), and any UI behavior that relies on CoinGecko, so the app runs using only Binance (WebSocket + REST fallback) and existing synthetic fallbacks.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "remover o CoinGecko, reverter exatamente para o estado anterior estável",
+          "Sim.. a ultima versão binance. Exatamente neste ponto.",
+          "iniciar agora o rollback/build completo para a última versão estável Binance‑only",
+          "Confirmado"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The codebase contains no runtime calls to CoinGecko endpoints and no CoinGecko-specific services/hooks are used anywhere in the frontend.",
+        "Any CoinGecko-related configuration variables are removed from the app runtime/config and are not required to run or build the project.",
+        "All dashboards/modules load successfully and continue to display live market data using Binance-only sources (WebSocket + REST fallback) and existing synthetic data behavior where applicable.",
+        "No user-facing UI text mentions CoinGecko; any user-facing text introduced/updated by this change is in English."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Publish the resulting Binance-only rollback as the new stable baseline of the project (i.e., the default behavior and code path going forward), with CoinGecko fully removed and not left as dead code.",
+      "target": "unknown",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "publicar imediatamente essa versão como a nova base estável",
+          "Confirmado"
+        ]
+      },
+      "acceptanceCriteria": [
+        "There is no optional/hidden switch that re-enables CoinGecko; the application operates as Binance-only by default.",
+        "The application builds successfully without any CoinGecko-related modules, imports, or config."
+      ]
+    }
+  ],
+  "constraints": [
+    "Respect the single-actor backend architecture; keep all Motoko logic in backend/main.mo.",
+    "Do not edit files under frontend/immutablePaths (frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui). Compose or wrap instead.",
+    "Use English for any user-facing text introduced or modified as part of this build request."
+  ],
+  "nonGoals": [
+    "Do not add new third-party market data providers (only Binance should remain).",
+    "Do not introduce new backend services, databases, or external infrastructure beyond the existing Internet Computer canister."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

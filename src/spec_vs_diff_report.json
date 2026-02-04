@@ -1,0 +1,40 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-04T11:46:02.659Z",
+  "summary": "The diff does not show removal of CoinGecko-related frontend/runtime code or configuration; it only modifies backend/main.mo (adding/including user profile and many type definitions) and updates project_state.json metadata. As a result, the Binance-only rollback and complete CoinGecko removal requested in REQ-1/REQ-2 are not evidenced by these changes. The diff also appears to add unrelated backend functionality (user profile storage/access control).",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Completely remove any CoinGecko dependency from the project and restore the application to the last stable Binance-only behavior (remove all CoinGecko code paths, config/env vars/constants, and UI behavior relying on CoinGecko; ensure no runtime calls to CoinGecko; keep user-facing text in English).",
+      "reason": "The provided diff shows modifications only to backend/main.mo and project_state.json; there is no evidence of removing CoinGecko-related frontend services/hooks/utilities, deleting CoinGecko endpoint calls, or removing CoinGecko-related configuration variables. No frontend files are modified in this diff summary.",
+      "evidence": [
+        "backend/main.mo",
+        "project_state.json"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Publish the Binance-only rollback as the new stable baseline with CoinGecko fully removed (no optional switch to re-enable; builds without CoinGecko modules/imports/config).",
+      "reason": "No evidence in the diff of deleting CoinGecko modules/imports/config or removing any feature flags/switches. Only backend/main.mo and project_state.json are modified, which does not demonstrate establishing Binance-only as the enforced baseline across the codebase.",
+      "evidence": [
+        "backend/main.mo",
+        "project_state.json"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Added/expanded backend user profile functionality (UserProfile type, get/save profile methods) with access control enforcement.",
+      "reason": "This backend feature is not requested by REQ-1/REQ-2 (which focus on removing CoinGecko and maintaining Binance-only market data behavior). The diff shows new public query/shared methods and profile storage unrelated to CoinGecko removal.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    }
+  ],
+  "confidence": 0.74,
+  "changed_files": [
+    "backend/main.mo",
+    "project_state.json"
+  ]
+}
