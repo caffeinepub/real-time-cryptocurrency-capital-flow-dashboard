@@ -1,7 +1,8 @@
-import { Activity, TrendingUp, Layers, Wifi, WifiOff, HeartPulse, BarChart3 } from 'lucide-react';
+import { Activity, Layers, Wifi, WifiOff, TrendingUp } from 'lucide-react';
 import { useBinanceData } from '../hooks/useBinanceData';
+import LoginButton from './LoginButton';
 
-type ModuleType = 'flows' | 'predictions' | 'confluence' | 'recovery' | 'performance';
+type ModuleType = 'flows' | 'confluence' | 'futures';
 
 interface HeaderProps {
   activeModule: ModuleType;
@@ -44,11 +45,9 @@ export default function Header({ activeModule, setActiveModule }: HeaderProps) {
   const statusText = getStatusText();
 
   const navButtons = [
-    { id: 'flows' as ModuleType, label: 'Fluxo', icon: Activity, color: 'neon-cyan' },
-    { id: 'predictions' as ModuleType, label: 'Previsões', icon: TrendingUp, color: 'neon-blue' },
-    { id: 'confluence' as ModuleType, label: 'Confluência', icon: Layers, color: 'neon-green' },
-    { id: 'recovery' as ModuleType, label: 'Recuperação', icon: HeartPulse, color: 'neon-purple' },
-    { id: 'performance' as ModuleType, label: 'Performance', icon: BarChart3, color: 'neon-pink' },
+    { id: 'flows' as ModuleType, label: 'Fluxo de Capital', icon: Activity, color: 'neon-cyan' },
+    { id: 'confluence' as ModuleType, label: 'Zonas de Confluência', icon: Layers, color: 'neon-green' },
+    { id: 'futures' as ModuleType, label: 'Futures Monitor', icon: TrendingUp, color: 'neon-yellow' },
   ];
 
   return (
@@ -95,7 +94,7 @@ export default function Header({ activeModule, setActiveModule }: HeaderProps) {
                   <button
                     key={button.id}
                     onClick={() => setActiveModule(button.id)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
                       isActive
                         ? `bg-${button.color}/20 text-${button.color} border border-${button.color}/50 shadow-${button.color}-sm`
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent/50 border border-transparent'
@@ -104,11 +103,14 @@ export default function Header({ activeModule, setActiveModule }: HeaderProps) {
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon className="w-4 h-4" />
-                    <span className="hidden sm:inline font-medium text-sm">{button.label}</span>
+                    <span className="font-medium text-sm">{button.label}</span>
                   </button>
                 );
               })}
             </nav>
+
+            {/* Login Button */}
+            <LoginButton />
           </div>
         </div>
       </div>

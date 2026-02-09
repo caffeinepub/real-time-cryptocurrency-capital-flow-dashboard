@@ -13,6 +13,12 @@ const PRECACHE_ASSETS = [
   '/manifest.json',
   '/assets/generated/pwa-icon.dim_512x512.png',
   '/assets/generated/pwa-maskable-icon.dim_512x512.png',
+  '/assets/generated/pwa-icon.dim_256x256.png',
+  '/assets/generated/pwa-maskable-icon.dim_256x256.png',
+  '/assets/generated/pwa-icon.dim_192x192.png',
+  '/assets/generated/pwa-maskable-icon.dim_192x192.png',
+  '/assets/generated/pwa-screenshot-mobile.dim_720x1280.png',
+  '/assets/generated/pwa-screenshot-desktop.dim_1280x720.png',
   '/assets/generated/dashboard-header.dim_1200x200.png',
   '/assets/generated/crypto-flow-bg.dim_1920x1080.png',
   '/assets/generated/crypto-icons-neon-transparent.dim_400x400.png',
@@ -116,7 +122,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
   const url = new URL(request.url);
 
   // Skip cross-origin requests except Binance
-  if (url.origin !== self.location.origin && !url.hostname.includes('binance.com')) {
+  if (url.origin !== self.location.origin && !url.hostname.includes('binance.com') && !url.hostname.includes('binance.us')) {
     return;
   }
 
@@ -155,7 +161,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           // Return a fallback for navigation requests
           if (request.mode === 'navigate') {
             return caches.match('/index.html').then((response) => {
-              return response || new Response('Offline - App não disponível', {
+              return response || new Response('Offline - App unavailable', {
                 status: 503,
                 statusText: 'Service Unavailable',
                 headers: { 'Content-Type': 'text/html; charset=utf-8' }
@@ -186,7 +192,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           const responseToCache = response.clone();
           
           // Use DATA_CACHE for API responses
-          const cacheName = url.hostname.includes('binance.com') || url.pathname.includes('canister') 
+          const cacheName = url.hostname.includes('binance.com') || url.hostname.includes('binance.us') || url.pathname.includes('canister') 
             ? DATA_CACHE 
             : RUNTIME_CACHE;
           
@@ -207,7 +213,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
             // Return appropriate error response
             if (request.mode === 'navigate') {
               return caches.match('/index.html').then((response) => {
-                return response || new Response('Offline - App não disponível', {
+                return response || new Response('Offline - App unavailable', {
                   status: 503,
                   statusText: 'Service Unavailable',
                   headers: { 'Content-Type': 'text/html; charset=utf-8' }
@@ -217,7 +223,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
             
             return new Response(JSON.stringify({ 
               error: 'Offline', 
-              message: 'Dados não disponíveis offline' 
+              message: 'Data unavailable offline' 
             }), {
               status: 503,
               statusText: 'Service Unavailable',

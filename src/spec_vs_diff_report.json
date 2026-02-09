@@ -1,40 +1,63 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-04T11:46:02.659Z",
-  "summary": "The diff does not show removal of CoinGecko-related frontend/runtime code or configuration; it only modifies backend/main.mo (adding/including user profile and many type definitions) and updates project_state.json metadata. As a result, the Binance-only rollback and complete CoinGecko removal requested in REQ-1/REQ-2 are not evidenced by these changes. The diff also appears to add unrelated backend functionality (user profile storage/access control).",
+  "generatedAt": "2026-02-09T11:51:49.559Z",
+  "summary": "Frontend work largely implements unified open-positions UI, formatting, polling+manual refresh, and deterministic per-position insights. However, the diff summary does not provide evidence that the backend HTTPS outcalls to Binance (USD-M + COIN-M), credential checks, request signing, unified normalization/merging, and zero-size filtering were implemented.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Completely remove any CoinGecko dependency from the project and restore the application to the last stable Binance-only behavior (remove all CoinGecko code paths, config/env vars/constants, and UI behavior relying on CoinGecko; ensure no runtime calls to CoinGecko; keep user-facing text in English).",
-      "reason": "The provided diff shows modifications only to backend/main.mo and project_state.json; there is no evidence of removing CoinGecko-related frontend services/hooks/utilities, deleting CoinGecko endpoint calls, or removing CoinGecko-related configuration variables. No frontend files are modified in this diff summary.",
+      "requirement": "Backend canister reads Binance Futures open positions for both USD-M (/fapi/v3/positionRisk) and COIN-M (/dapi/v1/positionRisk) using stored credentials via HTTPS outcalls, including timestamp+signature auth and X-MBX-APIKEY header; traps clearly if credentials missing; never logs/returns credentials.",
+      "reason": "The diff shows new frontend calling actor.getOpenFuturesPositions(), but backend/main.mo changes are truncated and do not show any implementation of the two Binance endpoints, signature/timestamp generation, X-MBX-APIKEY header, credential checks, or parsing of positionRisk responses.",
       "evidence": [
-        "backend/main.mo",
-        "project_state.json"
+        "backend/main.mo (truncated; no shown getOpenFuturesPositions/outcall logic)",
+        "frontend/src/hooks/useOpenFuturesPositions.ts (calls actor.getOpenFuturesPositions())"
       ]
     },
     {
       "id": "REQ-2",
-      "requirement": "Publish the Binance-only rollback as the new stable baseline with CoinGecko fully removed (no optional switch to re-enable; builds without CoinGecko modules/imports/config).",
-      "reason": "No evidence in the diff of deleting CoinGecko modules/imports/config or removing any feature flags/switches. Only backend/main.mo and project_state.json are modified, which does not demonstrate establishing Binance-only as the enforced baseline across the codebase.",
+      "requirement": "Expose a single backend API that returns a unified normalized list merging USD-M and COIN-M positionRisk responses, includes market identifier, and filters out zero-size positions.",
+      "reason": "Frontend expects a unified type (NormalizedFuturesPosition with a market field), but the diff summary does not show backend type definitions, merge logic, or zero-size filtering. Backend/main.mo is truncated before any relevant API/type evidence appears.",
       "evidence": [
-        "backend/main.mo",
-        "project_state.json"
+        "backend/main.mo (truncated; unified positions API/type not shown)",
+        "frontend/src/components/OpenPositionsTable.tsx (uses position.market and unified list rendering)",
+        "frontend/src/hooks/useOpenFuturesPositions.ts (expects actor.getOpenFuturesPositions() returning NormalizedFuturesPosition[])"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added/expanded backend user profile functionality (UserProfile type, get/save profile methods) with access control enforcement.",
-      "reason": "This backend feature is not requested by REQ-1/REQ-2 (which focus on removing CoinGecko and maintaining Binance-only market data behavior). The diff shows new public query/shared methods and profile storage unrelated to CoinGecko removal.",
+      "description": "Added/modified URL parameter + sessionStorage utilities unrelated to unified futures positions reading/insights.",
+      "reason": "REQ-1..REQ-5 do not mention URL parameter parsing, session persistence, or hash parameter stripping utilities.",
       "evidence": [
-        "backend/main.mo"
+        "frontend/src/utils/urlParams.ts"
+      ]
+    },
+    {
+      "description": "Project metadata/state tracking file updates not requested as part of the feature work.",
+      "reason": "REQ-1..REQ-5 describe backend Binance reads and frontend dashboard/hooks/UI; they do not request adding/updating project tracking JSON or file summary artifacts.",
+      "evidence": [
+        "project_state.json",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Insight icon helper returns emoji icons.",
+      "reason": "REQ-5 specifies deterministic English tips with cautious language, but does not request emoji/iconography for insight types.",
+      "evidence": [
+        "frontend/src/lib/positionInsights.ts (getInsightIcon)"
       ]
     }
   ],
-  "confidence": 0.74,
+  "confidence": 0.68,
   "changed_files": [
     "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/FuturesDashboard.tsx",
+    "frontend/src/components/OpenPositionsTable.tsx",
+    "frontend/src/hooks/useOpenFuturesPositions.ts",
+    "frontend/src/lib/futuresPositionFormat.ts",
+    "frontend/src/lib/positionInsights.ts",
+    "frontend/src/utils/urlParams.ts",
     "project_state.json"
   ]
 }

@@ -33,6 +33,18 @@ export function getUrlParameter(paramName: string): string | null {
 }
 
 /**
+ * Checks if a URL flag parameter exists (regardless of value)
+ * Useful for boolean flags like ?tab or ?debug
+ *
+ * @param paramName - The name of the flag to check
+ * @returns true if the parameter exists in the URL, false otherwise
+ */
+export function isUrlFlagEnabled(paramName: string): boolean {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.has(paramName);
+}
+
+/**
  * Stores a parameter in sessionStorage for persistence across navigation
  * Useful for maintaining state like admin tokens throughout the session
  *

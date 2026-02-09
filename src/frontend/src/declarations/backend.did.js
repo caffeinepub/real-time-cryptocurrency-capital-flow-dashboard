@@ -108,6 +108,21 @@ export const InstitutionalAlert = IDL.Record({
   'timestamp' : Time,
   'regionId' : IDL.Nat,
 });
+export const BinanceFuturesMarket = IDL.Variant({
+  'usdt_m' : IDL.Null,
+  'coin_m' : IDL.Null,
+});
+export const NormalizedFuturesPosition = IDL.Record({
+  'pnl' : IDL.Float64,
+  'markPrice' : IDL.Float64,
+  'leverage' : IDL.Float64,
+  'positionSide' : IDL.Text,
+  'liquidationPrice' : IDL.Float64,
+  'entryPrice' : IDL.Float64,
+  'market' : BinanceFuturesMarket,
+  'symbol' : IDL.Text,
+  'positionAmt' : IDL.Float64,
+});
 export const PerformanceSummary = IDL.Record({
   'averageAccuracy' : IDL.Float64,
   'totalPredictions' : IDL.Nat,
@@ -179,6 +194,24 @@ export const RegionalMetric = IDL.Record({
   'regionId' : IDL.Nat,
   'symbol' : IDL.Text,
 });
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -218,6 +251,7 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'addOrUpdateBinanceCredentials' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'addPredictionOutcome' : IDL.Func(
       [IDL.Text, IDL.Float64, IDL.Float64, IDL.Float64, IDL.Text],
       [],
@@ -303,6 +337,11 @@ export const idlService = IDL.Service({
       [ModelPerformance],
       ['query'],
     ),
+  'getOpenFuturesPositions' : IDL.Func(
+      [],
+      [IDL.Vec(NormalizedFuturesPosition)],
+      [],
+    ),
   'getPerformanceSummary' : IDL.Func(
       [IDL.Text],
       [PerformanceSummary],
@@ -361,10 +400,18 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getValidationState' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+  'hasBinanceCredentials' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCriticalAlertDay' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], ['query']),
   'printVolumeChanges' : IDL.Func([], [], []),
+  'removeBinanceCredentials' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'testBinanceConnection' : IDL.Func([], [IDL.Text], []),
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
+    ),
   'updateDirection' : IDL.Func([IDL.Text, IDL.Text, IDL.Float64], [], []),
 });
 
@@ -471,6 +518,21 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : Time,
     'regionId' : IDL.Nat,
   });
+  const BinanceFuturesMarket = IDL.Variant({
+    'usdt_m' : IDL.Null,
+    'coin_m' : IDL.Null,
+  });
+  const NormalizedFuturesPosition = IDL.Record({
+    'pnl' : IDL.Float64,
+    'markPrice' : IDL.Float64,
+    'leverage' : IDL.Float64,
+    'positionSide' : IDL.Text,
+    'liquidationPrice' : IDL.Float64,
+    'entryPrice' : IDL.Float64,
+    'market' : BinanceFuturesMarket,
+    'symbol' : IDL.Text,
+    'positionAmt' : IDL.Float64,
+  });
   const PerformanceSummary = IDL.Record({
     'averageAccuracy' : IDL.Float64,
     'totalPredictions' : IDL.Nat,
@@ -542,6 +604,21 @@ export const idlFactory = ({ IDL }) => {
     'regionId' : IDL.Nat,
     'symbol' : IDL.Text,
   });
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
@@ -581,6 +658,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'addOrUpdateBinanceCredentials' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'addPredictionOutcome' : IDL.Func(
         [IDL.Text, IDL.Float64, IDL.Float64, IDL.Float64, IDL.Text],
         [],
@@ -670,6 +748,11 @@ export const idlFactory = ({ IDL }) => {
         [ModelPerformance],
         ['query'],
       ),
+    'getOpenFuturesPositions' : IDL.Func(
+        [],
+        [IDL.Vec(NormalizedFuturesPosition)],
+        [],
+      ),
     'getPerformanceSummary' : IDL.Func(
         [IDL.Text],
         [PerformanceSummary],
@@ -728,10 +811,18 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getValidationState' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
+    'hasBinanceCredentials' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCriticalAlertDay' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], ['query']),
     'printVolumeChanges' : IDL.Func([], [], []),
+    'removeBinanceCredentials' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'testBinanceConnection' : IDL.Func([], [IDL.Text], []),
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
+        ['query'],
+      ),
     'updateDirection' : IDL.Func([IDL.Text, IDL.Text, IDL.Float64], [], []),
   });
 };

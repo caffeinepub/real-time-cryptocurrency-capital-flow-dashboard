@@ -133,7 +133,7 @@ const PWAInstallPrompt = () => {
           <button
             onClick={handleDismiss}
             className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
-            aria-label="Fechar"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -141,20 +141,20 @@ const PWAInstallPrompt = () => {
           <div className="pr-8">
             <h3 className="text-lg font-semibold text-white mb-2">
               {isDesktop 
-                ? 'Instale este aplicativo no seu computador' 
-                : 'Instale este aplicativo no seu celular'}
+                ? 'Install this app on your computer' 
+                : 'Install this app on your phone'}
             </h3>
             
             {isIOS && (
               <div className="space-y-2 text-sm text-gray-300">
-                <p className="text-neon-cyan font-medium">Para instalar no iOS Safari:</p>
+                <p className="text-neon-cyan font-medium">To install on iOS Safari:</p>
                 <ol className="list-decimal list-inside space-y-1 ml-2">
-                  <li>Toque no ícone de compartilhar <span className="inline-block text-lg">⎋</span> (na barra inferior)</li>
-                  <li>Role para baixo e toque em <span className="font-semibold text-white">"Adicionar à Tela de Início"</span></li>
-                  <li>Toque em <span className="font-semibold text-white">"Adicionar"</span> no canto superior direito</li>
+                  <li>Tap the share icon <span className="inline-block text-lg">⎋</span> (at the bottom bar)</li>
+                  <li>Scroll down and tap <span className="font-semibold text-white">"Add to Home Screen"</span></li>
+                  <li>Tap <span className="font-semibold text-white">"Add"</span> in the top right corner</li>
                 </ol>
                 <p className="text-xs text-gray-400 mt-2">
-                  O app aparecerá na sua tela inicial como um aplicativo nativo.
+                  The app will appear on your home screen like a native app.
                 </p>
               </div>
             )}
@@ -162,13 +162,13 @@ const PWAInstallPrompt = () => {
             {isAndroid && !installStatus.canPrompt && (
               <div className="space-y-2 text-sm text-gray-300">
                 <p className="mb-2">
-                  Acesse o dashboard de fluxo de capital cripto diretamente da sua tela inicial.
+                  Access the crypto capital flow dashboard directly from your home screen.
                 </p>
-                <p className="text-neon-cyan font-medium">Para instalar no Chrome Android:</p>
+                <p className="text-neon-cyan font-medium">To install on Chrome Android:</p>
                 <ol className="list-decimal list-inside space-y-1 ml-2">
-                  <li>Toque no menu <span className="inline-block text-lg">⋮</span> (três pontos)</li>
-                  <li>Selecione <span className="font-semibold text-white">"Adicionar à tela inicial"</span> ou <span className="font-semibold text-white">"Instalar app"</span></li>
-                  <li>Confirme tocando em <span className="font-semibold text-white">"Adicionar"</span></li>
+                  <li>Tap the menu <span className="inline-block text-lg">⋮</span> (three dots)</li>
+                  <li>Select <span className="font-semibold text-white">"Add to Home screen"</span> or <span className="font-semibold text-white">"Install app"</span></li>
+                  <li>Confirm by tapping <span className="font-semibold text-white">"Add"</span></li>
                 </ol>
               </div>
             )}
@@ -176,16 +176,16 @@ const PWAInstallPrompt = () => {
             {isDesktop && !installStatus.canPrompt && (
               <div className="space-y-2 text-sm text-gray-300">
                 <p className="mb-2">
-                  Instale o dashboard como um aplicativo nativo no seu computador para acesso rápido e funcionalidade offline.
+                  Install the dashboard as a native app on your computer for quick access and offline functionality.
                 </p>
-                <p className="text-neon-cyan font-medium">Para instalar no Chrome/Edge:</p>
+                <p className="text-neon-cyan font-medium">To install on Chrome/Edge:</p>
                 <ol className="list-decimal list-inside space-y-1 ml-2">
-                  <li>Clique no ícone de instalação <span className="inline-block text-lg">⊕</span> na barra de endereço</li>
-                  <li>Ou abra o menu <span className="inline-block text-lg">⋮</span> e selecione <span className="font-semibold text-white">"Instalar Crypto Flow Dashboard"</span></li>
-                  <li>Confirme clicando em <span className="font-semibold text-white">"Instalar"</span></li>
+                  <li>Click the install icon <span className="inline-block text-lg">⊕</span> in the address bar</li>
+                  <li>Or open the menu <span className="inline-block text-lg">⋮</span> and select <span className="font-semibold text-white">"Install Crypto Flow Dashboard"</span></li>
+                  <li>Confirm by clicking <span className="font-semibold text-white">"Install"</span></li>
                 </ol>
                 <p className="text-xs text-gray-400 mt-2">
-                  O app aparecerá como um aplicativo independente com ícone próprio.
+                  The app will appear as a standalone application with its own icon.
                 </p>
               </div>
             )}
@@ -193,8 +193,8 @@ const PWAInstallPrompt = () => {
             {(isAndroid || isDesktop) && installStatus.canPrompt && (
               <p className="text-sm text-gray-300 mb-4">
                 {isDesktop 
-                  ? 'Instale o dashboard como aplicativo nativo no seu computador para acesso rápido, funcionalidade offline completa e experiência otimizada.'
-                  : 'Acesse o dashboard de fluxo de capital cripto diretamente da sua tela inicial com experiência nativa e offline.'}
+                  ? 'Install the dashboard as a native app on your computer for quick access, full offline functionality, and an optimized experience.'
+                  : 'Access the crypto capital flow dashboard directly from your home screen with a native experience and offline support.'}
               </p>
             )}
 
@@ -206,7 +206,7 @@ const PWAInstallPrompt = () => {
                   className="flex-1 bg-gradient-to-r from-neon-cyan to-neon-blue hover:from-neon-cyan/80 hover:to-neon-blue/80 text-black font-semibold shadow-lg shadow-neon-cyan/30 transition-all duration-300"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Instalar Agora
+                  Install Now
                 </Button>
               )}
               
@@ -215,7 +215,7 @@ const PWAInstallPrompt = () => {
                 variant="outline"
                 className={`${(isAndroid || isDesktop) && installStatus.canPrompt ? '' : 'flex-1'} border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan/10`}
               >
-                {isIOS || !installStatus.canPrompt ? 'Entendi' : 'Mais Tarde'}
+                {isIOS || !installStatus.canPrompt ? 'Got it' : 'Later'}
               </Button>
             </div>
 
@@ -223,7 +223,7 @@ const PWAInstallPrompt = () => {
             {!installStatus.isSecure && (
               <p className="text-xs text-yellow-400 mt-2 flex items-center gap-1">
                 <span>⚠️</span>
-                <span>Requer conexão HTTPS para instalação</span>
+                <span>Requires HTTPS connection for installation</span>
               </p>
             )}
 
@@ -231,7 +231,7 @@ const PWAInstallPrompt = () => {
             {installStatus.isSecure && (
               <p className="text-xs text-neon-cyan/70 mt-2 flex items-center gap-1">
                 <span>✓</span>
-                <span>Suporte offline completo para todas as 5 abas principais</span>
+                <span>Full offline support for all main features</span>
               </p>
             )}
           </div>

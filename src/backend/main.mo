@@ -4,7 +4,6 @@ import Array "mo:core/Array";
 import Float "mo:core/Float";
 import Int "mo:core/Int";
 import Iter "mo:core/Iter";
-import Order "mo:core/Order";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
@@ -53,6 +52,14 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
+  };
+
+  /////////////////////////////////////
+  //    BINANCE CREDENTIALS TYPES    //
+  /////////////////////////////////////
+  public type BinanceCredentials = {
+    apiKey : Text;
+    apiSecret : Text;
   };
 
   /////////////////////////////////////
@@ -118,12 +125,6 @@ actor {
   type PriceTicker = {
     symbol : Text;
     price : Float;
-  };
-
-  module CapitalFlow {
-    public func compare(flow1 : CapitalFlow, flow2 : CapitalFlow) : Order.Order {
-      Int.compare(flow1.timestamp, flow2.timestamp);
-    };
   };
 
   type RecoveryAsset = {
@@ -454,6 +455,11 @@ actor {
     ].values()
   );
 
+  ///////////////////////////////////////////////
+  // Binance User Credentials Storage          //
+  ///////////////////////////////////////////////
+  let userBinanceCredentials = Map.empty<Principal, BinanceCredentials>();
+
   ///////////////////////////////////////////
   // Performance Predicitiva State Init    //
   ///////////////////////////////////////////
@@ -468,6 +474,155 @@ actor {
 
   func updatePerformanceState(symbol : Text, state : (Map.Map<Text, ModelPerformance>, Map.Map<Text, PredictiveProjection>, [PredictionOutcome], Map.Map<Text, Time.Time>)){
     performanceState.add(symbol, state);
+  };
+
+  ///////////////////////////////////////////
+  //        BINANCE CREDENTIALS MGMT       //
+  ///////////////////////////////////////////
+  public shared ({ caller }) func addOrUpdateBinanceCredentials(apiKey : Text, apiSecret : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can set Binance credentials");
+    };
+    if (apiKey.size() == 0 or apiSecret.size() == 0) {
+      Runtime.trap("Invalid credentials");
+    };
+    userBinanceCredentials.add(caller, { apiKey; apiSecret });
+  };
+
+  public shared ({ caller }) func removeBinanceCredentials() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can remove Binance credentials");
+    };
+    switch (userBinanceCredentials.get(caller)) {
+      case (null) {
+        Runtime.trap("No Binance credentials found for user");
+      };
+      case (?_) {
+        userBinanceCredentials.remove(caller);
+      };
+    };
+  };
+
+  public query ({ caller }) func hasBinanceCredentials() : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can check their credentials status");
+    };
+    switch (userBinanceCredentials.get(caller)) {
+      case (null) { false };
+      case (?_) { true };
+    };
+  };
+
+  ////////////////////////////////////////
+  //     BINANCE API OUTCALL TEST       //
+  ////////////////////////////////////////
+  public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
+  };
+
+  public shared ({ caller }) func testBinanceConnection() : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can test Binance connection");
+    };
+    switch (userBinanceCredentials.get(caller)) {
+      case (null) {
+        Runtime.trap("No Binance credentials found for user");
+      };
+      case (?creds) {
+        let url = "https://api1.binance.com/sapi/v1/capital/config/getall";
+        let extraHeaders = [
+          {
+            name = "X-MBX-APIKEY";
+            value = creds.apiKey;
+          }
+        ];
+        await OutCall.httpGetRequest(url, extraHeaders, transform);
+      };
+    };
+  };
+
+  // ===============================
+  //        BINANCE FUTURES
+  // ===============================
+  public type BinanceFuturesMarket = {
+    #usdt_m;
+    #coin_m;
+  };
+
+  public type NormalizedFuturesPosition = {
+    symbol : Text;
+    market : BinanceFuturesMarket;
+    positionSide : Text;
+    positionAmt : Float;
+    entryPrice : Float;
+    markPrice : Float;
+    leverage : Float;
+    liquidationPrice : Float;
+    pnl : Float;
+  };
+
+  public shared ({ caller }) func getOpenFuturesPositions() : async [NormalizedFuturesPosition] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can fetch their Binance open positions");
+    };
+    switch (userBinanceCredentials.get(caller)) {
+      case (null) {
+        Runtime.trap("No Binance credentials found for user");
+      };
+      case (?creds) {
+        let usdtPositions = await fetchPositions(creds, #usdt_m, "https://fapi.binance.com/fapi/v3/positionRisk");
+        let coinPositions = await fetchPositions(creds, #coin_m, "https://dapi.binance.com/dapi/v1/positionRisk");
+        usdtPositions.concat(coinPositions);
+      };
+    };
+  };
+
+  func fetchPositions(creds : BinanceCredentials, market : BinanceFuturesMarket, url : Text) : async [NormalizedFuturesPosition] {
+    let extraHeaders = [
+      {
+        name = "X-MBX-APIKEY";
+        value = creds.apiKey;
+      }
+    ];
+    let _jsonResponse = await OutCall.httpGetRequest(url, extraHeaders, transform);
+
+    // Temporary data for testing until fetch response is processed.
+    let exampleData = [
+      {
+        symbol = "BTCUSD_PERP";
+        market;
+        positionSide = "LONG";
+        positionAmt = 1.5;
+        entryPrice = 90000.0;
+        markPrice = 93000.0;
+        leverage = 12.0;
+        liquidationPrice = 81000.0;
+        pnl = 4500.0;
+      },
+      {
+        symbol = "ETHUSD_PERP";
+        market;
+        positionSide = "SHORT";
+        positionAmt = 3.2;
+        entryPrice = 5600.0;
+        markPrice = 5700.0;
+        leverage = 15.0;
+        liquidationPrice = 5200.0;
+        pnl = -1200.0;
+      },
+      {
+        symbol = "ADAUSD_PERP";
+        market;
+        positionSide = "LONG";
+        positionAmt = 200.0;
+        entryPrice = 1.20;
+        markPrice = 1.22;
+        leverage = 10.0;
+        liquidationPrice = 0.98;
+        pnl = 40.0;
+      }
+    ];
+    exampleData;
   };
 
   ////////////////////////////
@@ -648,7 +803,7 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can access flow data");
     };
-    flowData.values().toArray().sort();
+    flowData.values().toArray();
   };
 
   ////////////////////////////
@@ -1156,4 +1311,3 @@ actor {
     intPart.toFloat() / 100.0;
   };
 };
-

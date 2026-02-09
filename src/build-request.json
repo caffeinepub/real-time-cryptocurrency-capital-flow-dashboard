@@ -1,60 +1,138 @@
 {
   "kind": "build_request",
-  "title": "Rollback to last stable Binance-only build and remove CoinGecko entirely",
-  "priority": "high",
+  "title": "Enable unified Binance Futures (USD-M + COIN-M) positions reading and automated position insights",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Completely remove any CoinGecko dependency from the project and restore the application to the last stable Binance-only behavior. This includes removing all CoinGecko-related code paths (services, hooks, utilities, fallbacks), configuration (env vars, constants), and any UI behavior that relies on CoinGecko, so the app runs using only Binance (WebSocket + REST fallback) and existing synthetic fallbacks.",
-      "target": "both",
+      "text": "Add backend canister support to read Binance Futures open positions for both USD-M and COIN-M using the user’s stored read-only Binance API credentials, by calling the Binance endpoints `/fapi/v3/positionRisk` (USD-M) and `/dapi/v1/positionRisk` (COIN-M) via HTTPS outcalls.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-9",
+          "msg-13",
+          "msg-16"
         ],
         "quotes": [
-          "remover o CoinGecko, reverter exatamente para o estado anterior estável",
-          "Sim.. a ultima versão binance. Exatamente neste ponto.",
-          "iniciar agora o rollback/build completo para a última versão estável Binance‑only",
-          "Confirmado"
+          "Eu faco trades.. nos futuros... usd-m e coin-m.",
+          "Agora vamos preparar a aba para analisar minhas posicoes, e gerencia-las dando dicas",
+          "Sim."
         ]
       },
       "acceptanceCriteria": [
-        "The codebase contains no runtime calls to CoinGecko endpoints and no CoinGecko-specific services/hooks are used anywhere in the frontend.",
-        "Any CoinGecko-related configuration variables are removed from the app runtime/config and are not required to run or build the project.",
-        "All dashboards/modules load successfully and continue to display live market data using Binance-only sources (WebSocket + REST fallback) and existing synthetic data behavior where applicable.",
-        "No user-facing UI text mentions CoinGecko; any user-facing text introduced/updated by this change is in English."
+        "When the caller has stored Binance credentials, the canister can successfully perform authenticated HTTPS requests to both `/fapi/v3/positionRisk` and `/dapi/v1/positionRisk` and return parsed position data.",
+        "When the caller has no stored Binance credentials, the method(s) trap with a clear error indicating missing credentials.",
+        "Requests include required Binance authentication elements (timestamp and signature) and send the API key via `X-MBX-APIKEY` header.",
+        "No credential values are returned to the frontend and are never logged."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Publish the resulting Binance-only rollback as the new stable baseline of the project (i.e., the default behavior and code path going forward), with CoinGecko fully removed and not left as dead code.",
-      "target": "unknown",
+      "text": "Expose a single backend API that returns a unified, normalized list of open futures positions by merging USD-M and COIN-M positionRisk responses into one common position type (including which market each position came from).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-14",
+          "msg-15"
         ],
         "quotes": [
-          "publicar imediatamente essa versão como a nova base estável",
-          "Confirmado"
+          "Unidos",
+          "Perfeito — vamos unir as posições USD‑M e COIN‑M em uma única lista."
         ]
       },
       "acceptanceCriteria": [
-        "There is no optional/hidden switch that re-enables CoinGecko; the application operates as Binance-only by default.",
-        "The application builds successfully without any CoinGecko-related modules, imports, or config."
+        "The backend returns a single array of positions that includes data from both USD-M and COIN-M.",
+        "Each returned position includes a field identifying its market (USD-M vs COIN-M).",
+        "Positions that have zero size are filtered out (no-position entries from Binance are not shown as open positions)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Implement frontend React Query hooks to fetch the unified futures positions from the backend, with a manual “Refresh” action and a safe polling interval suitable for monitoring (e.g., periodic refetch while the Futures Dashboard is visible).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-16",
+          "msg-18"
+        ],
+        "quotes": [
+          "Sim.",
+          "Refresh"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When Binance credentials are configured, the Futures Dashboard loads positions from the backend and shows a loading state during fetch.",
+        "Clicking the “Refresh” button triggers an immediate refetch and updates the UI.",
+        "Polling/refetching does not run when the user is not authenticated or when credentials are missing.",
+        "Errors from the backend are displayed in the UI in English with an actionable message (e.g., missing credentials, Binance request failed)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Replace the current placeholder “Open Positions” panel in `frontend/src/components/FuturesDashboard.tsx` with a unified positions table/list view that displays key position fields for both USD-M and COIN-M in one list (at minimum: symbol, side/position amount, entry price, mark price, unrealized PnL, leverage, liquidation price when available, and market type).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-14",
+          "msg-16"
+        ],
+        "quotes": [
+          "Unidos",
+          "Sim."
+        ]
+      },
+      "acceptanceCriteria": [
+        "The Open Positions section shows a unified list combining USD-M and COIN-M positions.",
+        "Each row clearly indicates whether the position is USD-M or COIN-M.",
+        "If there are no open positions, the UI shows an explicit empty state (in English) rather than placeholder text.",
+        "Displayed numeric values are formatted consistently and remain readable in the existing neon/dark theme."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Add automated position analysis and simple management tips in the frontend based on the unified position data, including at least: high unrealized PnL suggesting taking partial profit, liquidation price proximity warnings, large distance between entry price and mark price, and mark price movement/volatility hints. Display these tips per-position (and optionally a small summary).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-13",
+          "msg-16"
+        ],
+        "quotes": [
+          "Agora vamos preparar a aba para analisar minhas posicoes, e gerencia-las dando dicas",
+          "Sim."
+        ]
+      },
+      "acceptanceCriteria": [
+        "For each open position, the UI can display zero or more generated “insights”/tips derived from the live position fields.",
+        "Tips include at least these categories: (1) high PnL suggestion, (2) liquidation risk proximity, (3) entry vs mark distance, (4) mark price movement hint.",
+        "Tips are deterministic from the data (same input => same output) and do not require any external AI/LLM integration.",
+        "The UI copy is in English and uses cautious language (e.g., “Consider…”, “Risk: …”) rather than claiming certainty."
       ]
     }
   ],
   "constraints": [
-    "Respect the single-actor backend architecture; keep all Motoko logic in backend/main.mo.",
-    "Do not edit files under frontend/immutablePaths (frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui). Compose or wrap instead.",
-    "Use English for any user-facing text introduced or modified as part of this build request."
+    "Do not edit files under `frontend/src/components/ui` (compose existing shadcn components instead).",
+    "Do not edit any frontend paths listed as immutable in SYSTEM_CONTEXT (e.g., `frontend/src/hooks/useInternetIdentity.ts(x)`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`).",
+    "Backend must remain a single Motoko actor in `backend/main.mo`; only add a `backend/migration.mo` if state schema changes require it.",
+    "Do not introduce non-supported technologies (no external databases, no WebSockets-based backend, no third-party auth besides Internet Identity)."
   ],
   "nonGoals": [
-    "Do not add new third-party market data providers (only Binance should remain).",
-    "Do not introduce new backend services, databases, or external infrastructure beyond the existing Internet Computer canister."
+    "Executing trades, placing orders, or any write-capable Binance actions (read-only monitoring only).",
+    "Adding push notifications, SMS, email alerts, or real-time chat.",
+    "Adding third-party AI/LLM integrations for generating tips."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

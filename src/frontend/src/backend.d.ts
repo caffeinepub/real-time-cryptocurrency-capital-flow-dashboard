@@ -16,7 +16,82 @@ export interface RegionalFlow {
     correlations: Array<[string, number]>;
     intensity: number;
 }
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export type Time = bigint;
+export interface InstitutionalAlert {
+    intensityChange: number;
+    type: string;
+    alertId: bigint;
+    volumeChange: number;
+    timestamp: Time;
+    regionId: bigint;
+}
+export interface ConfidenceMetrics {
+    improvementRatio: number;
+    averageConfidence: number;
+    assetSymbol: string;
+    accuracyImprovement: number;
+    confidenceAccuracyCorrelation: number;
+}
+export interface RegionalMetric {
+    value: number;
+    timestamp: Time;
+    metricType: string;
+    regionId: bigint;
+    symbol: string;
+}
+export interface PerformanceSummary {
+    averageAccuracy: number;
+    totalPredictions: bigint;
+    validatedPredictions: bigint;
+    assetSymbol: string;
+    averageDeviation: number;
+    lowestPerformer: string;
+    highestPerformer: string;
+    validationTime: number;
+}
+export interface AlertConfig {
+    updated_at: Time;
+    criticalAlertDays: Array<bigint>;
+    minVolumeThreshold: number;
+    highPriorityAlertTypes: Array<string>;
+    maxAlertFrequency: bigint;
+    minIntensityThreshold: number;
+}
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
+}
+export interface PredictiveProjection {
+    trend: string;
+    asset: CryptoAsset;
+    targetLevels: Array<TargetLevel>;
+    confidenceLevel: number;
+    precision: number;
+    timeHorizon: bigint;
+}
+export interface RecoveryAsset {
+    rsi: number;
+    supports: Array<number>;
+    patternType: string;
+    volume: number;
+    openInterest: number;
+    isMomentumBreakout: boolean;
+    isInstitutionalEntry: boolean;
+    recoveryStrength: number;
+    symbol: string;
+}
+export interface TargetLevel {
+    priceLevel: number;
+    source: string;
+    confidenceScore: number;
+    levelType: string;
+    timestamp: Time;
+}
 export interface PriceTicker {
     price: number;
     symbol: string;
@@ -45,20 +120,25 @@ export interface CryptoAsset {
     usdValue: number;
     symbol: string;
 }
-export interface InstitutionalAlert {
-    intensityChange: number;
-    type: string;
-    alertId: bigint;
-    volumeChange: number;
+export interface http_header {
+    value: string;
+    name: string;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export interface Region {
+    flowRatio: number;
+    name: string;
+    volume: number;
+    capitalFlow: number;
+    countryCodes: Array<string>;
     timestamp: Time;
     regionId: bigint;
-}
-export interface ConfidenceMetrics {
-    improvementRatio: number;
-    averageConfidence: number;
-    assetSymbol: string;
-    accuracyImprovement: number;
-    confidenceAccuracyCorrelation: number;
+    intensity: number;
+    coordinates: [number, number];
 }
 export interface ModelPerformance {
     performanceScore: number;
@@ -72,38 +152,10 @@ export interface ModelPerformance {
     validationTime: number;
     accuracy: number;
 }
-export interface Region {
-    flowRatio: number;
-    name: string;
-    volume: number;
-    capitalFlow: number;
-    countryCodes: Array<string>;
-    timestamp: Time;
-    regionId: bigint;
-    intensity: number;
-    coordinates: [number, number];
-}
-export interface RegionalMetric {
-    value: number;
-    timestamp: Time;
-    metricType: string;
-    regionId: bigint;
-    symbol: string;
-}
 export interface ConfluenceZone {
     indicators: Array<string>;
     timestamp: Time;
     intensity: number;
-}
-export interface PerformanceSummary {
-    averageAccuracy: number;
-    totalPredictions: bigint;
-    validatedPredictions: bigint;
-    assetSymbol: string;
-    averageDeviation: number;
-    lowestPerformer: string;
-    highestPerformer: string;
-    validationTime: number;
 }
 export interface RegionalCryptoAsset {
     marketCap: number;
@@ -121,36 +173,9 @@ export interface RegionalCorrelation {
     regionId: bigint;
     symbol: string;
 }
-export interface PredictiveProjection {
-    trend: string;
-    asset: CryptoAsset;
-    targetLevels: Array<TargetLevel>;
-    confidenceLevel: number;
-    precision: number;
-    timeHorizon: bigint;
-}
 export interface AssetOutcomes {
     assetSymbol: string;
     predictionOutcomes: Array<PredictionOutcome>;
-}
-export interface AlertConfig {
-    updated_at: Time;
-    criticalAlertDays: Array<bigint>;
-    minVolumeThreshold: number;
-    highPriorityAlertTypes: Array<string>;
-    maxAlertFrequency: bigint;
-    minIntensityThreshold: number;
-}
-export interface RecoveryAsset {
-    rsi: number;
-    supports: Array<number>;
-    patternType: string;
-    volume: number;
-    openInterest: number;
-    isMomentumBreakout: boolean;
-    isInstitutionalEntry: boolean;
-    recoveryStrength: number;
-    symbol: string;
 }
 export interface CapitalFlow {
     marketImpact: number;
@@ -161,17 +186,25 @@ export interface CapitalFlow {
     fromAsset: CryptoAsset;
     toAsset: CryptoAsset;
 }
-export interface TargetLevel {
-    priceLevel: number;
-    source: string;
-    confidenceScore: number;
-    levelType: string;
-    timestamp: Time;
+export interface NormalizedFuturesPosition {
+    pnl: number;
+    markPrice: number;
+    leverage: number;
+    positionSide: string;
+    liquidationPrice: number;
+    entryPrice: number;
+    market: BinanceFuturesMarket;
+    symbol: string;
+    positionAmt: number;
 }
 export interface UserProfile {
     name: string;
     email?: string;
     preferences?: string;
+}
+export enum BinanceFuturesMarket {
+    usdt_m = "usdt_m",
+    coin_m = "coin_m"
 }
 export enum UserRole {
     admin = "admin",
@@ -183,6 +216,7 @@ export interface backendInterface {
     addConfluenceZone(symbol: string, indicators: Array<string>, intensity: number): Promise<void>;
     addInstitutionalAlert(alertId: bigint, regionId: bigint, type: string, volumeChange: number, intensityChange: number): Promise<void>;
     addModelPerformance(symbol: string, modelName: string, accuracy: number, deviation: number, validationTime: number, performanceScore: number, confidence: number): Promise<void>;
+    addOrUpdateBinanceCredentials(apiKey: string, apiSecret: string): Promise<void>;
     addPredictionOutcome(symbol: string, predictedValue: number, actualValue: number, confidence: number, outcome: string): Promise<void>;
     addPredictiveProjection(symbol: string, asset: CryptoAsset, trend: string, confidence: number, precision: number, horizon: bigint, targetLevels: Array<TargetLevel> | null): Promise<void>;
     addRecoveryAsset(symbol: string, recoveryStrength: number, patternType: string, openInterest: number, volume: number, rsi: number, supports: Array<number>, isMomentumBreakout: boolean, isInstitutionalEntry: boolean): Promise<void>;
@@ -212,6 +246,7 @@ export interface backendInterface {
         intensity: number;
     }>;
     getModelPerformance(symbol: string, modelName: string): Promise<ModelPerformance>;
+    getOpenFuturesPositions(): Promise<Array<NormalizedFuturesPosition>>;
     getPerformanceSummary(symbol: string): Promise<PerformanceSummary>;
     getPredictionOutcomes(symbol: string): Promise<Array<PredictionOutcome>>;
     getPredictiveProjection(symbol: string): Promise<PredictiveProjection>;
@@ -226,9 +261,13 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getValidationResults(symbol: string, modelName: string): Promise<Array<string>>;
     getValidationState(symbol: string): Promise<bigint>;
+    hasBinanceCredentials(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     isCriticalAlertDay(regionId: bigint, dayOfYear: bigint): Promise<boolean>;
     printVolumeChanges(): Promise<void>;
+    removeBinanceCredentials(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    testBinanceConnection(): Promise<string>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     updateDirection(symbol: string, direction: string, intensity: number): Promise<void>;
 }

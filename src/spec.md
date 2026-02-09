@@ -1,13 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Roll back the app to the last stable Binance-only baseline and remove CoinGecko entirely.
+**Goal:** Enable reading and displaying unified Binance Futures open positions across USD-M and COIN-M, with basic automated per-position insights.
 
 **Planned changes:**
-- Remove all CoinGecko-related code paths from frontend and backend (services, hooks, utilities, fallbacks), eliminating any runtime calls to CoinGecko endpoints.
-- Remove CoinGecko-related configuration (env vars, constants) so builds/runs do not require CoinGecko settings.
-- Ensure all dashboards/modules load and display live market data using Binance-only sources (WebSocket with REST fallback) plus existing synthetic fallback behavior where applicable.
-- Remove any user-facing UI text that mentions CoinGecko (any updated/introduced text is in English).
-- Make the Binance-only rollback the default stable baseline with no optional/hidden switch to re-enable CoinGecko.
+- Add backend canister support to call Binance Futures position endpoints `/fapi/v3/positionRisk` (USD-M) and `/dapi/v1/positionRisk` (COIN-M) using stored read-only API credentials, via HTTPS outcalls.
+- Expose a single backend API that merges USD-M and COIN-M position data into one normalized open-positions list (including a market-type field and filtering out zero-size positions).
+- Add frontend React Query hooks to fetch unified positions with a manual “Refresh” action and safe polling while the Futures Dashboard is visible (disabled when unauthenticated or credentials are missing).
+- Replace the placeholder “Open Positions” panel in `frontend/src/components/FuturesDashboard.tsx` with a unified positions table/list showing key fields (symbol, side/amount, entry price, mark price, unrealized PnL, leverage, liquidation price when available, and market type).
+- Add deterministic, data-driven per-position tips/insights in English (e.g., high PnL partial profit suggestion, liquidation proximity warning, entry vs mark distance, and mark price movement/volatility hints).
 
-**User-visible outcome:** The application runs and builds as Binance-only, with dashboards continuing to show live market data without any CoinGecko dependency or mentions.
+**User-visible outcome:** Users can view a single combined list of their USD-M and COIN-M open futures positions, refresh and monitor them, and see simple per-position management insights in English without any trade execution.

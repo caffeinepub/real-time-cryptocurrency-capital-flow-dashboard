@@ -1,14 +1,14 @@
 {
-  "name": "Dashboard de Fluxo de Capital Cripto em Tempo Real",
+  "name": "Real-Time Crypto Capital Flow Dashboard",
   "short_name": "Crypto Flow",
-  "description": "Dashboard em tempo real de fluxo de capital de criptomoedas com visualização de USD para crypto, inteligência preditiva e detecção de recuperação",
+  "description": "Real-time cryptocurrency capital flow dashboard with USD to crypto visualization, predictive intelligence, and recovery detection",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
   "orientation": "any",
-  "lang": "pt-BR",
+  "lang": "en",
   "icons": [
     {
       "src": "/assets/generated/pwa-icon.dim_512x512.png",
@@ -23,25 +23,25 @@
       "purpose": "maskable"
     },
     {
-      "src": "/assets/generated/pwa-icon.dim_512x512.png",
+      "src": "/assets/generated/pwa-icon.dim_256x256.png",
       "sizes": "256x256",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/generated/pwa-maskable-icon.dim_512x512.png",
+      "src": "/assets/generated/pwa-maskable-icon.dim_256x256.png",
       "sizes": "256x256",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/assets/generated/pwa-icon.dim_512x512.png",
+      "src": "/assets/generated/pwa-icon.dim_192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/generated/pwa-maskable-icon.dim_512x512.png",
+      "src": "/assets/generated/pwa-maskable-icon.dim_192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
@@ -50,10 +50,18 @@
   "categories": ["finance", "productivity"],
   "screenshots": [
     {
-      "src": "/assets/generated/dashboard-header.dim_1200x200.png",
-      "sizes": "1200x200",
+      "src": "/assets/generated/pwa-screenshot-desktop.dim_1280x720.png",
+      "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Desktop Dashboard View"
+    },
+    {
+      "src": "/assets/generated/pwa-screenshot-mobile.dim_720x1280.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Dashboard View"
     }
   ]
 }

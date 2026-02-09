@@ -22,6 +22,8 @@ export interface AssetOutcomes {
   'assetSymbol' : string,
   'predictionOutcomes' : Array<PredictionOutcome>,
 }
+export type BinanceFuturesMarket = { 'usdt_m' : null } |
+  { 'coin_m' : null };
 export interface CapitalFlow {
   'marketImpact' : number,
   'flowIntensity' : number,
@@ -72,6 +74,17 @@ export interface ModelPerformance {
   'timestamp' : Time,
   'validationTime' : number,
   'accuracy' : number,
+}
+export interface NormalizedFuturesPosition {
+  'pnl' : number,
+  'markPrice' : number,
+  'leverage' : number,
+  'positionSide' : string,
+  'liquidationPrice' : number,
+  'entryPrice' : number,
+  'market' : BinanceFuturesMarket,
+  'symbol' : string,
+  'positionAmt' : number,
 }
 export interface PerformanceSummary {
   'averageAccuracy' : number,
@@ -168,6 +181,15 @@ export interface TargetLevel {
   'timestamp' : Time,
 }
 export type Time = bigint;
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : http_request_result,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface UserProfile {
   'name' : string,
   'email' : [] | [string],
@@ -176,6 +198,12 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface http_header { 'value' : string, 'name' : string }
+export interface http_request_result {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addCapitalFlow' : ActorMethod<
@@ -191,6 +219,7 @@ export interface _SERVICE {
     [string, string, number, number, number, number, number],
     undefined
   >,
+  'addOrUpdateBinanceCredentials' : ActorMethod<[string, string], undefined>,
   'addPredictionOutcome' : ActorMethod<
     [string, number, number, number, string],
     undefined
@@ -246,6 +275,7 @@ export interface _SERVICE {
     { 'direction' : string, 'summary' : string, 'intensity' : number }
   >,
   'getModelPerformance' : ActorMethod<[string, string], ModelPerformance>,
+  'getOpenFuturesPositions' : ActorMethod<[], Array<NormalizedFuturesPosition>>,
   'getPerformanceSummary' : ActorMethod<[string], PerformanceSummary>,
   'getPredictionOutcomes' : ActorMethod<[string], Array<PredictionOutcome>>,
   'getPredictiveProjection' : ActorMethod<[string], PredictiveProjection>,
@@ -260,10 +290,14 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getValidationResults' : ActorMethod<[string, string], Array<string>>,
   'getValidationState' : ActorMethod<[string], bigint>,
+  'hasBinanceCredentials' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isCriticalAlertDay' : ActorMethod<[bigint, bigint], boolean>,
   'printVolumeChanges' : ActorMethod<[], undefined>,
+  'removeBinanceCredentials' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'testBinanceConnection' : ActorMethod<[], string>,
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateDirection' : ActorMethod<[string, string, number], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

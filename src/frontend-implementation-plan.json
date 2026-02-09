@@ -1,102 +1,76 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Rollback to stable Binance-only frontend and remove CoinGecko references",
+  "title": "Unified Futures Positions UI (fetch, refresh, polling, table, and deterministic insights)",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Remove CoinGecko from frontend runtime and restore Binance-only (WebSocket + REST fallback) with existing synthetic fallbacks.",
+      "id": "REQ-3",
+      "summary": "Add React Query hook to fetch unified futures positions with manual refresh and safe polling while Futures Dashboard is visible.",
       "acceptanceCriteria": [
-        "The codebase contains no runtime calls to CoinGecko endpoints and no CoinGecko-specific services/hooks are used anywhere in the frontend.",
-        "Any CoinGecko-related configuration variables are removed from the app runtime/config and are not required to run or build the project.",
-        "All dashboards/modules load successfully and continue to display live market data using Binance-only sources (WebSocket + REST fallback) and existing synthetic data behavior where applicable.",
-        "No user-facing UI text mentions CoinGecko; any user-facing text introduced/updated by this change is in English."
+        "When Binance credentials are configured, the Futures Dashboard loads positions from the backend and shows a loading state during fetch.",
+        "Clicking the “Refresh” button triggers an immediate refetch and updates the UI.",
+        "Polling/refetching does not run when the user is not authenticated or when credentials are missing.",
+        "Errors from the backend are displayed in the UI in English with an actionable message (e.g., missing credentials, Binance request failed)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Audit and remove any CoinGecko-related imports, code paths, or fallbacks (services/hooks/utilities) and ensure all enrich/fallback logic uses only Binance live data via useBinanceData plus existing synthetic behaviors."
-        },
-        {
-          "path": "frontend/src/hooks/useBinanceData.ts",
-          "operation": "modify",
-          "description": "Confirm Binance-only behavior by removing any CoinGecko fallback branches (if present) and ensuring the data pipeline is strictly Binance WebSocket with REST polling fallback."
-        },
-        {
-          "path": "frontend/src/lib/binanceService.ts",
-          "operation": "modify",
-          "description": "Ensure all market-data base URLs and REST fallback logic are Binance-only, and remove any CoinGecko-related constants/configuration (if present)."
-        },
-        {
-          "path": "frontend/src/lib/coingeckoService.ts",
-          "operation": "delete",
-          "description": "Delete CoinGecko service module (if present) to ensure no CoinGecko runtime calls remain."
-        },
-        {
-          "path": "frontend/src/hooks/useCoinGeckoData.ts",
-          "operation": "delete",
-          "description": "Delete any CoinGecko-specific hook (if present) to prevent CoinGecko usage in the frontend."
-        },
-        {
-          "path": "frontend/src/lib/coingecko.ts",
-          "operation": "delete",
-          "description": "Delete any CoinGecko utility module (if present) used for URL building, symbol mapping, or fallback logic."
-        },
-        {
-          "path": "frontend/src/lib/marketDataProvider.ts",
+          "path": "frontend/src/hooks/useOpenFuturesPositions.ts",
           "operation": "create",
-          "description": "Create a single Binance-only market data provider facade used by the app to centralize and constrain provider usage to Binance (no provider switching)."
+          "description": "Create a dedicated React Query hook that calls the backend actor getOpenFuturesPositions() and supports: (1) manual refetch, (2) safe polling (refetchInterval) only when the Futures Dashboard is mounted/visible, (3) query enablement gated by Internet Identity authentication state and hasBinanceCredentials(), and (4) standardized error mapping to English actionable messages. Use the core-infrastructure actor access pattern (via existing useActor). Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/FlowVisualization.tsx",
+          "path": "frontend/src/components/FuturesDashboard.tsx",
           "operation": "modify",
-          "description": "Remove any CoinGecko-dependent UI behavior (if present) and ensure flow rendering continues using backend data + Binance-only live/synthetic fallback. If any CoinGecko text exists, remove it and ensure replacements are in English."
-        },
-        {
-          "path": "frontend/src/components/PredictiveIntelligence.tsx",
-          "operation": "modify",
-          "description": "Remove any CoinGecko-dependent UI behavior (if present) and ensure projections continue using backend data and Binance-only synthetic projections. If any CoinGecko text exists, remove it and ensure replacements are in English."
-        },
-        {
-          "path": "frontend/src/components/ConfluenceZones.tsx",
-          "operation": "modify",
-          "description": "Remove any CoinGecko-dependent UI behavior (if present) and ensure zones continue using backend data + Binance-only synthetic fallback. If any CoinGecko text exists, remove it and ensure replacements are in English."
+          "description": "Wire the new useOpenFuturesPositions hook into the dashboard: show a loading state during fetch, connect the existing Refresh button to query.refetch(), and ensure polling is enabled only when the user is authenticated and Binance credentials exist (otherwise disabled). Surface any backend errors as an English alert with next-step guidance (e.g., configure credentials / retry). Use existing shadcn-ui components (e.g., Alert, Button) without editing files under frontend/src/components/ui. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-2",
-      "summary": "Make the Binance-only rollback the default stable baseline with CoinGecko fully removed (no hidden switches or dead code).",
+      "id": "REQ-4",
+      "summary": "Replace the placeholder Open Positions panel with a unified USD-M + COIN-M positions table/list showing key fields and market type.",
       "acceptanceCriteria": [
-        "There is no optional/hidden switch that re-enables CoinGecko; the application operates as Binance-only by default.",
-        "The application builds successfully without any CoinGecko-related modules, imports, or config."
+        "The Open Positions section shows a unified list combining USD-M and COIN-M positions.",
+        "Each row clearly indicates whether the position is USD-M or COIN-M.",
+        "If there are no open positions, the UI shows an explicit empty state (in English) rather than placeholder text.",
+        "Displayed numeric values are formatted consistently and remain readable in the existing neon/dark theme."
       ],
       "file_operations": [
         {
-          "path": "frontend/package.json",
-          "operation": "modify",
-          "description": "Remove CoinGecko-related frontend dependencies and scripts (if present) so the frontend builds without any CoinGecko modules."
+          "path": "frontend/src/components/OpenPositionsTable.tsx",
+          "operation": "create",
+          "description": "Add a reusable OpenPositionsTable component that renders the unified positions list in a readable neon/dark theme-friendly layout (table or list). Display at minimum: symbol, positionSide/positionAmt, entryPrice, markPrice, pnl (unrealized), leverage, liquidationPrice (when present/meaningful), and market type (USD-M vs COIN-M). Use existing shadcn-ui building blocks (e.g., Card/Table/Badge if available, otherwise semantic markup + existing Tailwind utilities) without modifying frontend/src/components/ui. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/.env",
-          "operation": "modify",
-          "description": "Remove any CoinGecko-related environment variables from the frontend runtime configuration (if present)."
+          "path": "frontend/src/lib/futuresPositionFormat.ts",
+          "operation": "create",
+          "description": "Create formatting helpers for futures positions to keep numeric output consistent and readable (e.g., price, size, leverage, PnL), with English-friendly formatting where appropriate, and safe handling of missing/zero liquidation price. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/.env.example",
+          "path": "frontend/src/components/FuturesDashboard.tsx",
           "operation": "modify",
-          "description": "Remove any CoinGecko-related environment variable documentation (if present) so no CoinGecko config is implied or required."
+          "description": "Replace the current Open Positions placeholder content with the new OpenPositionsTable component wired to the unified positions query data. Add an explicit empty state message in English when the returned list is empty. Ensure the market type is clearly labeled per row (USD-M / COIN-M) and formatting uses the shared helpers. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Generate deterministic per-position insights/tips (no AI) from unified position fields and display them in the Open Positions UI.",
+      "acceptanceCriteria": [
+        "For each open position, the UI can display zero or more generated “insights”/tips derived from the live position fields.",
+        "Tips include at least these categories: (1) high PnL suggestion, (2) liquidation risk proximity, (3) entry vs mark distance, (4) mark price movement hint.",
+        "Tips are deterministic from the data (same input => same output) and do not require any external AI/LLM integration.",
+        "The UI copy is in English and uses cautious language (e.g., “Consider…”, “Risk: …”) rather than claiming certainty."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/lib/positionInsights.ts",
+          "operation": "create",
+          "description": "Implement deterministic insight generation utilities for a NormalizedFuturesPosition. Include rules for: high unrealized PnL (suggest partial profit-taking), liquidation proximity (risk warning based on distance between mark and liquidation adjusted for side), large entry vs mark distance (position drift note), and mark price movement/volatility hint (e.g., large % move from entry implying elevated volatility/need to review risk). Ensure outputs are stable, purely data-driven, and English cautious wording. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/components/OpenPositionsTable.tsx",
           "operation": "modify",
-          "description": "Ensure no provider-selection or feature-flag logic references CoinGecko (if present), and confirm the default behavior is Binance-only."
-        },
-        {
-          "path": "frontend/src/lib/marketDataProvider.ts",
-          "operation": "modify",
-          "description": "Lock the provider facade to Binance-only exports and remove/avoid any provider toggle or fallback-to-CoinGecko option to prevent dead/hidden code paths."
+          "description": "Integrate the insight generator to display zero or more tips per position (e.g., below the row or in a dedicated column/section). Optionally add a small summary (e.g., count of positions with liquidation warnings / high PnL) without introducing new top-level routes. Use existing shadcn-ui components for visual emphasis where appropriate, without editing frontend/src/components/ui. Verify the component's usage instructions before implementing."
         }
       ]
     }

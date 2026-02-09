@@ -98,7 +98,82 @@ export interface RegionalFlow {
     correlations: Array<[string, number]>;
     intensity: number;
 }
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export type Time = bigint;
+export interface InstitutionalAlert {
+    intensityChange: number;
+    type: string;
+    alertId: bigint;
+    volumeChange: number;
+    timestamp: Time;
+    regionId: bigint;
+}
+export interface ConfidenceMetrics {
+    improvementRatio: number;
+    averageConfidence: number;
+    assetSymbol: string;
+    accuracyImprovement: number;
+    confidenceAccuracyCorrelation: number;
+}
+export interface RegionalMetric {
+    value: number;
+    timestamp: Time;
+    metricType: string;
+    regionId: bigint;
+    symbol: string;
+}
+export interface PerformanceSummary {
+    averageAccuracy: number;
+    totalPredictions: bigint;
+    validatedPredictions: bigint;
+    assetSymbol: string;
+    averageDeviation: number;
+    lowestPerformer: string;
+    highestPerformer: string;
+    validationTime: number;
+}
+export interface AlertConfig {
+    updated_at: Time;
+    criticalAlertDays: Array<bigint>;
+    minVolumeThreshold: number;
+    highPriorityAlertTypes: Array<string>;
+    maxAlertFrequency: bigint;
+    minIntensityThreshold: number;
+}
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
+}
+export interface PredictiveProjection {
+    trend: string;
+    asset: CryptoAsset;
+    targetLevels: Array<TargetLevel>;
+    confidenceLevel: number;
+    precision: number;
+    timeHorizon: bigint;
+}
+export interface RecoveryAsset {
+    rsi: number;
+    supports: Array<number>;
+    patternType: string;
+    volume: number;
+    openInterest: number;
+    isMomentumBreakout: boolean;
+    isInstitutionalEntry: boolean;
+    recoveryStrength: number;
+    symbol: string;
+}
+export interface TargetLevel {
+    priceLevel: number;
+    source: string;
+    confidenceScore: number;
+    levelType: string;
+    timestamp: Time;
+}
 export interface PriceTicker {
     price: number;
     symbol: string;
@@ -127,20 +202,25 @@ export interface CryptoAsset {
     usdValue: number;
     symbol: string;
 }
-export interface InstitutionalAlert {
-    intensityChange: number;
-    type: string;
-    alertId: bigint;
-    volumeChange: number;
+export interface http_header {
+    value: string;
+    name: string;
+}
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
+export interface Region {
+    flowRatio: number;
+    name: string;
+    volume: number;
+    capitalFlow: number;
+    countryCodes: Array<string>;
     timestamp: Time;
     regionId: bigint;
-}
-export interface ConfidenceMetrics {
-    improvementRatio: number;
-    averageConfidence: number;
-    assetSymbol: string;
-    accuracyImprovement: number;
-    confidenceAccuracyCorrelation: number;
+    intensity: number;
+    coordinates: [number, number];
 }
 export interface ModelPerformance {
     performanceScore: number;
@@ -154,38 +234,10 @@ export interface ModelPerformance {
     validationTime: number;
     accuracy: number;
 }
-export interface Region {
-    flowRatio: number;
-    name: string;
-    volume: number;
-    capitalFlow: number;
-    countryCodes: Array<string>;
-    timestamp: Time;
-    regionId: bigint;
-    intensity: number;
-    coordinates: [number, number];
-}
-export interface RegionalMetric {
-    value: number;
-    timestamp: Time;
-    metricType: string;
-    regionId: bigint;
-    symbol: string;
-}
 export interface ConfluenceZone {
     indicators: Array<string>;
     timestamp: Time;
     intensity: number;
-}
-export interface PerformanceSummary {
-    averageAccuracy: number;
-    totalPredictions: bigint;
-    validatedPredictions: bigint;
-    assetSymbol: string;
-    averageDeviation: number;
-    lowestPerformer: string;
-    highestPerformer: string;
-    validationTime: number;
 }
 export interface RegionalCryptoAsset {
     marketCap: number;
@@ -203,36 +255,9 @@ export interface RegionalCorrelation {
     regionId: bigint;
     symbol: string;
 }
-export interface PredictiveProjection {
-    trend: string;
-    asset: CryptoAsset;
-    targetLevels: Array<TargetLevel>;
-    confidenceLevel: number;
-    precision: number;
-    timeHorizon: bigint;
-}
 export interface AssetOutcomes {
     assetSymbol: string;
     predictionOutcomes: Array<PredictionOutcome>;
-}
-export interface AlertConfig {
-    updated_at: Time;
-    criticalAlertDays: Array<bigint>;
-    minVolumeThreshold: number;
-    highPriorityAlertTypes: Array<string>;
-    maxAlertFrequency: bigint;
-    minIntensityThreshold: number;
-}
-export interface RecoveryAsset {
-    rsi: number;
-    supports: Array<number>;
-    patternType: string;
-    volume: number;
-    openInterest: number;
-    isMomentumBreakout: boolean;
-    isInstitutionalEntry: boolean;
-    recoveryStrength: number;
-    symbol: string;
 }
 export interface CapitalFlow {
     marketImpact: number;
@@ -243,17 +268,25 @@ export interface CapitalFlow {
     fromAsset: CryptoAsset;
     toAsset: CryptoAsset;
 }
-export interface TargetLevel {
-    priceLevel: number;
-    source: string;
-    confidenceScore: number;
-    levelType: string;
-    timestamp: Time;
+export interface NormalizedFuturesPosition {
+    pnl: number;
+    markPrice: number;
+    leverage: number;
+    positionSide: string;
+    liquidationPrice: number;
+    entryPrice: number;
+    market: BinanceFuturesMarket;
+    symbol: string;
+    positionAmt: number;
 }
 export interface UserProfile {
     name: string;
     email?: string;
     preferences?: string;
+}
+export enum BinanceFuturesMarket {
+    usdt_m = "usdt_m",
+    coin_m = "coin_m"
 }
 export enum UserRole {
     admin = "admin",
@@ -266,6 +299,7 @@ export interface backendInterface {
     addConfluenceZone(symbol: string, indicators: Array<string>, intensity: number): Promise<void>;
     addInstitutionalAlert(alertId: bigint, regionId: bigint, type: string, volumeChange: number, intensityChange: number): Promise<void>;
     addModelPerformance(symbol: string, modelName: string, accuracy: number, deviation: number, validationTime: number, performanceScore: number, confidence: number): Promise<void>;
+    addOrUpdateBinanceCredentials(apiKey: string, apiSecret: string): Promise<void>;
     addPredictionOutcome(symbol: string, predictedValue: number, actualValue: number, confidence: number, outcome: string): Promise<void>;
     addPredictiveProjection(symbol: string, asset: CryptoAsset, trend: string, confidence: number, precision: number, horizon: bigint, targetLevels: Array<TargetLevel> | null): Promise<void>;
     addRecoveryAsset(symbol: string, recoveryStrength: number, patternType: string, openInterest: number, volume: number, rsi: number, supports: Array<number>, isMomentumBreakout: boolean, isInstitutionalEntry: boolean): Promise<void>;
@@ -295,6 +329,7 @@ export interface backendInterface {
         intensity: number;
     }>;
     getModelPerformance(symbol: string, modelName: string): Promise<ModelPerformance>;
+    getOpenFuturesPositions(): Promise<Array<NormalizedFuturesPosition>>;
     getPerformanceSummary(symbol: string): Promise<PerformanceSummary>;
     getPredictionOutcomes(symbol: string): Promise<Array<PredictionOutcome>>;
     getPredictiveProjection(symbol: string): Promise<PredictiveProjection>;
@@ -309,13 +344,17 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getValidationResults(symbol: string, modelName: string): Promise<Array<string>>;
     getValidationState(symbol: string): Promise<bigint>;
+    hasBinanceCredentials(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     isCriticalAlertDay(regionId: bigint, dayOfYear: bigint): Promise<boolean>;
     printVolumeChanges(): Promise<void>;
+    removeBinanceCredentials(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    testBinanceConnection(): Promise<string>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     updateDirection(symbol: string, direction: string, intensity: number): Promise<void>;
 }
-import type { TargetLevel as _TargetLevel, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { BinanceFuturesMarket as _BinanceFuturesMarket, NormalizedFuturesPosition as _NormalizedFuturesPosition, TargetLevel as _TargetLevel, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -385,6 +424,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.addModelPerformance(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            return result;
+        }
+    }
+    async addOrUpdateBinanceCredentials(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addOrUpdateBinanceCredentials(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addOrUpdateBinanceCredentials(arg0, arg1);
             return result;
         }
     }
@@ -742,6 +795,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getOpenFuturesPositions(): Promise<Array<NormalizedFuturesPosition>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getOpenFuturesPositions();
+                return from_candid_vec_n10(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getOpenFuturesPositions();
+            return from_candid_vec_n10(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getPerformanceSummary(arg0: string): Promise<PerformanceSummary> {
         if (this.processError) {
             try {
@@ -938,6 +1005,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async hasBinanceCredentials(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.hasBinanceCredentials();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.hasBinanceCredentials();
+            return result;
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -980,17 +1061,59 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+    async removeBinanceCredentials(): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n10(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.removeBinanceCredentials();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n10(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.removeBinanceCredentials();
+            return result;
+        }
+    }
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n15(this._uploadFile, this._downloadFile, arg0));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n15(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async testBinanceConnection(): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.testBinanceConnection();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.testBinanceConnection();
+            return result;
+        }
+    }
+    async transform(arg0: TransformationInput): Promise<TransformationOutput> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.transform(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.transform(arg0);
             return result;
         }
     }
@@ -1009,6 +1132,12 @@ export class Backend implements backendInterface {
         }
     }
 }
+function from_candid_BinanceFuturesMarket_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BinanceFuturesMarket): BinanceFuturesMarket {
+    return from_candid_variant_n14(_uploadFile, _downloadFile, value);
+}
+function from_candid_NormalizedFuturesPosition_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NormalizedFuturesPosition): NormalizedFuturesPosition {
+    return from_candid_record_n12(_uploadFile, _downloadFile, value);
+}
 function from_candid_UserProfile_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
     return from_candid_record_n6(_uploadFile, _downloadFile, value);
 }
@@ -1020,6 +1149,39 @@ function from_candid_opt_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 }
 function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    pnl: number;
+    markPrice: number;
+    leverage: number;
+    positionSide: string;
+    liquidationPrice: number;
+    entryPrice: number;
+    market: _BinanceFuturesMarket;
+    symbol: string;
+    positionAmt: number;
+}): {
+    pnl: number;
+    markPrice: number;
+    leverage: number;
+    positionSide: string;
+    liquidationPrice: number;
+    entryPrice: number;
+    market: BinanceFuturesMarket;
+    symbol: string;
+    positionAmt: number;
+} {
+    return {
+        pnl: value.pnl,
+        markPrice: value.markPrice,
+        leverage: value.leverage,
+        positionSide: value.positionSide,
+        liquidationPrice: value.liquidationPrice,
+        entryPrice: value.entryPrice,
+        market: from_candid_BinanceFuturesMarket_n13(_uploadFile, _downloadFile, value.market),
+        symbol: value.symbol,
+        positionAmt: value.positionAmt
+    };
 }
 function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     name: string;
@@ -1036,6 +1198,13 @@ function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint
         preferences: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.preferences))
     };
 }
+function from_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    usdt_m: null;
+} | {
+    coin_m: null;
+}): BinanceFuturesMarket {
+    return "usdt_m" in value ? BinanceFuturesMarket.usdt_m : "coin_m" in value ? BinanceFuturesMarket.coin_m : value;
+}
 function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
@@ -1045,8 +1214,11 @@ function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function to_candid_UserProfile_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n11(_uploadFile, _downloadFile, value);
+function from_candid_vec_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_NormalizedFuturesPosition>): Array<NormalizedFuturesPosition> {
+    return value.map((x)=>from_candid_NormalizedFuturesPosition_n11(_uploadFile, _downloadFile, x));
+}
+function to_candid_UserProfile_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n16(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n3(_uploadFile, _downloadFile, value);
@@ -1054,7 +1226,7 @@ function to_candid_UserRole_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint
 function to_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<TargetLevel> | null): [] | [Array<_TargetLevel>] {
     return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_record_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     name: string;
     email?: string;
     preferences?: string;

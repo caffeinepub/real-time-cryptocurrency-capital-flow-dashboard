@@ -33,11 +33,11 @@ export function validatePWARequirements(): {
   const errors: string[] = [];
 
   if (!isSecureContext()) {
-    errors.push('App deve ser servido via HTTPS');
+    errors.push('App must be served via HTTPS');
   }
 
   if (!('serviceWorker' in navigator)) {
-    errors.push('Service Worker não suportado');
+    errors.push('Service Worker not supported');
   }
 
   return {
@@ -53,20 +53,20 @@ export function initPWAInstallPrompt(): void {
   // Validate requirements first
   const validation = validatePWARequirements();
   if (!validation.isValid) {
-    console.warn('[PWA] Requisitos não atendidos:', validation.errors);
+    console.warn('[PWA] Requirements not met:', validation.errors);
   }
 
   window.addEventListener('beforeinstallprompt', (e: Event) => {
     e.preventDefault();
     deferredPrompt = e as BeforeInstallPromptEvent;
-    console.log('[PWA] Prompt de instalação disponível');
+    console.log('[PWA] Install prompt available');
     
     // Dispatch custom event for components to listen
     window.dispatchEvent(new CustomEvent('pwa-install-available'));
   });
 
   window.addEventListener('appinstalled', () => {
-    console.log('[PWA] App instalado com sucesso');
+    console.log('[PWA] App installed successfully');
     deferredPrompt = null;
     // Clear dismissed flag when app is installed
     localStorage.removeItem('pwa-install-dismissed');
@@ -82,14 +82,14 @@ export function initPWAInstallPrompt(): void {
  */
 export async function showInstallPrompt(): Promise<boolean> {
   if (!deferredPrompt) {
-    console.log('[PWA] Prompt de instalação não disponível');
+    console.log('[PWA] Install prompt not available');
     return false;
   }
 
   try {
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`[PWA] Usuário ${outcome === 'accepted' ? 'aceitou' : 'recusou'} a instalação`);
+    console.log(`[PWA] User ${outcome === 'accepted' ? 'accepted' : 'dismissed'} installation`);
     
     if (outcome === 'accepted') {
       localStorage.removeItem('pwa-install-dismissed');
@@ -99,7 +99,7 @@ export async function showInstallPrompt(): Promise<boolean> {
     deferredPrompt = null;
     return outcome === 'accepted';
   } catch (error) {
-    console.error('[PWA] Erro ao mostrar prompt de instalação:', error);
+    console.error('[PWA] Error showing install prompt:', error);
     return false;
   }
 }
@@ -183,7 +183,7 @@ export async function checkForUpdates(): Promise<boolean> {
     await registration.update();
     return registration.waiting !== null;
   } catch (error) {
-    console.error('[PWA] Erro ao verificar atualizações:', error);
+    console.error('[PWA] Error checking for updates:', error);
     return false;
   }
 }

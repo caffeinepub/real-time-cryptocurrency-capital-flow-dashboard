@@ -3,7 +3,6 @@ import { useActor } from './useActor';
 import { useBinanceData } from './useBinanceData';
 import type { 
   CapitalFlow, 
-  PredictiveProjection, 
   ConfluenceZone, 
   CryptoAsset, 
   RecoveryAsset,
@@ -11,21 +10,10 @@ import type {
   RegionalFlow,
   InstitutionalAlert,
   RegionalCorrelation,
-  ModelPerformance,
-  PerformanceSummary,
-  ConfidenceMetrics,
-  PredictionOutcome,
   RegionalMetric
 } from '../backend';
 import { roundToTwoDecimals } from '../lib/formatters';
-import { normalizeToQuoteSymbol, symbolsMatch, WHITELISTED_SYMBOLS } from '../lib/symbols';
-
-export interface PredictionWithLivePrice {
-  symbol: string;
-  prediction: PredictiveProjection | null;
-  livePrice: number;
-  priceChange: number;
-}
+import { symbolsMatch, WHITELISTED_SYMBOLS } from '../lib/symbols';
 
 export interface EnrichedRegionalData {
   regionId: number;
@@ -84,71 +72,6 @@ export function useCapitalFlows() {
     enabled: !!actor && !isFetching,
     refetchInterval: isLive ? 3000 : 10000,
     staleTime: 2000,
-    placeholderData: (previousData) => previousData,
-  });
-}
-
-export function usePredictiveProjections() {
-  const { actor, isFetching } = useActor();
-  const { marketData, isLive } = useBinanceData();
-
-  return useQuery<PredictiveProjection[]>({
-    queryKey: ['predictiveProjections'],
-    queryFn: async () => {
-      if (!actor) return [];
-      
-      try {
-        // Fetch projections for each whitelisted symbol
-        const projections: PredictiveProjection[] = [];
-        
-        for (const symbol of WHITELISTED_SYMBOLS) {
-          try {
-            const projection = await actor.getPredictiveProjection(symbol);
-            projections.push(projection);
-          } catch (err) {
-            // Projection might not exist for this symbol, continue
-          }
-        }
-        
-        // Enhance projections with live Binance data using symbol matching
-        if (marketData.length > 0 && projections.length > 0) {
-          return projections.map(proj => {
-            // Match using normalized symbols
-            const liveData = marketData.find(m => symbolsMatch(m.symbol, proj.asset.symbol));
-            if (liveData) {
-              // Determine trend based on price change
-              let trend = proj.trend;
-              if (liveData.priceChangePercent > 2) {
-                trend = 'Alta';
-              } else if (liveData.priceChangePercent < -2) {
-                trend = 'Baixa';
-              } else {
-                trend = 'Neutro';
-              }
-              
-              return {
-                ...proj,
-                asset: {
-                  ...proj.asset,
-                  usdValue: roundToTwoDecimals(liveData.price),
-                },
-                trend,
-                confidenceLevel: roundToTwoDecimals(Math.min(0.95, Math.abs(liveData.priceChangePercent) / 5)),
-              };
-            }
-            return proj;
-          });
-        }
-        
-        return projections;
-      } catch (error) {
-        console.error('Error fetching predictive projections:', error);
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching,
-    refetchInterval: isLive ? 5000 : 15000,
-    staleTime: 3000,
     placeholderData: (previousData) => previousData,
   });
 }
@@ -445,178 +368,6 @@ export function useEnrichedRegionalData() {
     enabled: !!actor && !isFetching && regions.length > 0,
     refetchInterval: 8000,
     staleTime: 5000,
-  });
-}
-
-// Performance Preditiva Queries with Binance Integration
-export function useModelPerformances(symbol: string) {
-  const { actor, isFetching } = useActor();
-  const { getMarketData } = useBinanceData();
-
-  return useQuery<ModelPerformance[]>({
-    queryKey: ['modelPerformances', symbol],
-    queryFn: async () => {
-      if (!actor) return [];
-      
-      try {
-        const performances = await actor.getAllModelPerformances(symbol);
-        
-        // Enhance with real-time Binance data
-        const liveData = getMarketData(normalizeToQuoteSymbol(symbol));
-        if (liveData && performances.length > 0) {
-          return performances.map(perf => ({
-            ...perf,
-            // Update predictions with current market price as actual value
-            predictions: perf.predictions.map(pred => ({
-              ...pred,
-              actualValue: roundToTwoDecimals(liveData.price),
-            })),
-          }));
-        }
-        
-        return performances;
-      } catch (error) {
-        console.error('Error fetching model performances:', error);
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 10000,
-    staleTime: 5000,
-  });
-}
-
-export function usePerformanceSummaries() {
-  const { actor, isFetching } = useActor();
-  const { marketData } = useBinanceData();
-
-  return useQuery<PerformanceSummary[]>({
-    queryKey: ['performanceSummaries', marketData.length],
-    queryFn: async () => {
-      if (!actor) return [];
-      
-      try {
-        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'ICPUSDT'];
-        const summaries: PerformanceSummary[] = [];
-        
-        for (const symbol of symbols) {
-          try {
-            const summary = await actor.getPerformanceSummary(symbol);
-            summaries.push(summary);
-          } catch (err) {
-            console.error(`Error fetching summary for ${symbol}:`, err);
-          }
-        }
-        
-        return summaries;
-      } catch (error) {
-        console.error('Error fetching performance summaries:', error);
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 15000,
-    staleTime: 10000,
-  });
-}
-
-export function usePerformanceMetrics(symbol: string) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<ConfidenceMetrics>({
-    queryKey: ['performanceMetrics', symbol],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      
-      try {
-        const metrics = await actor.getConfidenceMetrics(symbol);
-        return metrics;
-      } catch (error) {
-        console.error('Error fetching performance metrics:', error);
-        throw error;
-      }
-    },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 12000,
-    staleTime: 8000,
-  });
-}
-
-// New hook to get prediction outcomes with real-time Binance prices
-export function usePredictionOutcomes(symbol: string) {
-  const { actor, isFetching } = useActor();
-  const { getMarketData } = useBinanceData();
-
-  return useQuery<PredictionOutcome[]>({
-    queryKey: ['predictionOutcomes', symbol],
-    queryFn: async () => {
-      if (!actor) return [];
-      
-      try {
-        const outcomes = await actor.getPredictionOutcomes(symbol);
-        
-        // Update with current market price
-        const liveData = getMarketData(normalizeToQuoteSymbol(symbol));
-        if (liveData && outcomes.length > 0) {
-          return outcomes.map(outcome => ({
-            ...outcome,
-            actualValue: roundToTwoDecimals(liveData.price),
-          }));
-        }
-        
-        return outcomes;
-      } catch (error) {
-        console.error('Error fetching prediction outcomes:', error);
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 8000,
-    staleTime: 5000,
-  });
-}
-
-// New hook to merge predictions with real-time prices
-export function usePredictionsWithLivePrices() {
-  const { actor, isFetching } = useActor();
-  const { marketData } = useBinanceData();
-
-  return useQuery<PredictionWithLivePrice[]>({
-    queryKey: ['predictionsWithLivePrices', marketData.length],
-    queryFn: async () => {
-      if (!actor) return [];
-      
-      try {
-        const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'ICPUSDT'];
-        const results: PredictionWithLivePrice[] = [];
-        
-        for (const symbol of symbols) {
-          const liveData = marketData.find(m => m.symbol === symbol);
-          let prediction: PredictiveProjection | null = null;
-          
-          try {
-            prediction = await actor.getPredictiveProjection(symbol);
-          } catch (err) {
-            // Prediction might not exist
-          }
-          
-          results.push({
-            symbol,
-            prediction,
-            livePrice: liveData ? roundToTwoDecimals(liveData.price) : 0,
-            priceChange: liveData ? roundToTwoDecimals(liveData.priceChangePercent) : 0,
-          });
-        }
-        
-        return results;
-      } catch (error) {
-        console.error('Error fetching predictions with live prices:', error);
-        return [];
-      }
-    },
-    enabled: !!actor && !isFetching && marketData.length > 0,
-    refetchInterval: 5000,
-    staleTime: 3000,
   });
 }
 

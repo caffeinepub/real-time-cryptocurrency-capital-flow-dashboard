@@ -1,407 +1,84 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Crypto Flow (CryptoFlow Intelligence) é um dashboard/PWA em português com tema neon e dados em tempo real da Binance Futures (WebSocket com fallback REST) + backend ICP/Motoko para armazenamento/consultas. O escopo recente reforça operar Binance-only (sem CoinGecko/APIs extras) e foca em estabilidade da aba Inteligência Preditiva (evitar tela preta durante sincronização) e em Performance Preditiva refletindo resultados reais das projeções.",
+  "summary": "App para visualizar e analisar posições de futuros da Binance (USD‑M e COIN‑M) usando API key somente leitura, com lista unificada e dicas automáticas de gestão/riscos.",
+  "architectural_notes": [
+    "Usar API Binance Futures USD‑M (/fapi/v3/positionRisk) e COIN‑M (/dapi/v1/positionRisk) para buscar posições.",
+    "API key configurada como somente leitura; foco inicial em visualização/análise (sem execução de ordens)."
+  ],
+  "known_issues": [
+    "Dashboard/aba de posições ainda não realiza leitura real de dados da Binance (integração de leitura pendente)."
+  ],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "IF-1",
-      "title": "Five-module dashboard shell with dark neon theme",
-      "synonyms": [
-        "Module navigation (Fluxo/Previsões/Confluência/Recuperação/Performance)",
-        "App layout + theme"
+      "id": "feature-implement-frontend-react-query-hooks-to-fetch-the-unified-futures-positions-from-the-backend-with-a-manual-refresh-action-and-a-safe-polling-interval-suitable-for-monitoring-e-g-periodic-refetch-while-the-futures-dashboard-is-visible",
+      "title": "Implement frontend React Query hooks to fetch the unified futures positions from the backend, with a manual “Refresh” action and a safe polling interval suitable for monitoring (e.g., periodic refetch while the Futures Dashboard is visible).",
+      "reqIds": [
+        "REQ-3"
       ],
-      "description": "Root React app provides a fixed dark theme via next-themes and a header-based module switcher to render five main dashboard modules in Portuguese, with shared header/footer layout and toast infrastructure.",
-      "reqIds": [],
       "version": 1
     },
     {
-      "id": "IF-2",
-      "title": "Binance Futures WebSocket multi-stream live ticker client with reconnection",
-      "synonyms": [
-        "Live Binance ticker stream",
-        "WebSocket streaming"
+      "id": "feature-replace-the-current-placeholder-open-positions-panel-in-frontend-src-components-futuresdashboard-tsx-with-a-unified-positions-table-list-view-that-displays-key-position-fields-for-both-usd-m-and-coin-m-in-one-list-at-minimum-symbol-side-position-amount-entry-price-mark-price-unrealized-pnl-leverage-liquidation-price-when-available-and-market-type",
+      "title": "Replace the current placeholder “Open Positions” panel in `frontend/src/components/FuturesDashboard.tsx` with a unified positions table/list view that displays key position fields for both USD-M and COIN-M in one list (at minimum: symbol, side/position amount, entry price, mark price, unrealized PnL, leverage, liquidation price when available, and market type).",
+      "reqIds": [
+        "REQ-4"
       ],
-      "description": "Implements a WebSocket client subscribing to multiple @ticker streams for whitelisted symbols, parses both stream-wrapped and direct 24hr ticker formats, tracks connection status, and retries with bounded backoff.",
-      "reqIds": [],
       "version": 1
     },
     {
-      "id": "IF-3",
-      "title": "Binance REST fallback polling for prices",
-      "synonyms": [
-        "Degraded mode polling",
-        "REST fallback"
+      "id": "feature-add-automated-position-analysis-and-simple-management-tips-in-the-frontend-based-on-the-unified-position-data-including-at-least-high-unrealized-pnl-suggesting-taking-partial-profit-liquidation-price-proximity-warnings-large-distance-between-entry-price-and-mark-price-and-mark-price-movement-volatility-hints-display-these-tips-per-position-and-optionally-a-small-summary",
+      "title": "Add automated position analysis and simple management tips in the frontend based on the unified position data, including at least: high unrealized PnL suggesting taking partial profit, liquidation price proximity warnings, large distance between entry price and mark price, and mark price movement/volatility hints. Display these tips per-position (and optionally a small summary).",
+      "reqIds": [
+        "REQ-5"
       ],
-      "description": "When WebSocket is disconnected or errors, the app polls Binance Futures REST /ticker/price and merges prices into the live market state at an interval to keep the dashboard usable.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-4",
-      "title": "Unified live market state hook with shared cache",
-      "synonyms": [
-        "useBinanceData",
-        "Market data provider"
-      ],
-      "description": "Provides normalized market data (price, 24h change, volumes, lastUpdate), per-symbol lookup, connectionStatus, and derived flags (isLive/hasData). Maintains a module-level cache to avoid flicker and preserve state across remounts.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-5",
-      "title": "Portuguese formatting utilities (currency/percentage/compact numbers)",
-      "synonyms": [
-        "pt-BR number formatting",
-        "formatters"
-      ],
-      "description": "Formats numbers consistently for pt-BR locale, including $ currency formatting, percentage formatting, compact K/M/B formatting, and 2-decimal rounding helpers used across the UI.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-6",
-      "title": "Symbol normalization and robust symbol matching",
-      "synonyms": [
-        "Base/quote symbol utilities",
-        "symbolsMatch"
-      ],
-      "description": "Normalizes symbols between base and Binance quote formats (e.g., BTC ↔ BTCUSDT), compares symbols safely across formats, and computes deterministic symbol seeds and target multipliers for consistent fallback rendering.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-7",
-      "title": "Internet Identity authentication provider with persistence",
-      "synonyms": [
-        "InternetIdentityProvider",
-        "AuthClient integration"
-      ],
-      "description": "Implements an Internet Identity context using @dfinity/auth-client, supporting login/logout, loading persisted identities on mount, and exposing detailed status flags and errors to the app.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-8",
-      "title": "Secure URL hash secret extraction and session persistence",
-      "synonyms": [
-        "Admin token in hash",
-        "urlParams secret management"
-      ],
-      "description": "Utilities extract sensitive parameters from URL hash fragments, persist them in sessionStorage, and remove secrets from the URL without reload to reduce accidental leakage.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-9",
-      "title": "Backend actor creation with access-control initialization",
-      "synonyms": [
-        "useActor",
-        "Actor bootstrap"
-      ],
-      "description": "Creates an anonymous or identity-backed ICP actor. For authenticated sessions, it retrieves a secret token and calls _initializeAccessControlWithSecret, then invalidates/refetches other React Query caches when the actor changes.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-10",
-      "title": "Role-based access control with admin bootstrap secret",
-      "synonyms": [
-        "RBAC",
-        "AccessControl + MixinAuthorization"
-      ],
-      "description": "Motoko backend provides RBAC where the first correctly initialized principal becomes admin (gated by CAFFEINE_ADMIN_TOKEN), others become users; includes role query helpers and admin-only role assignment.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-11",
-      "title": "Access-controlled user profile storage (backend)",
-      "synonyms": [
-        "UserProfile APIs",
-        "Profile persistence"
-      ],
-      "description": "Backend stores per-principal user profiles and exposes access-controlled queries for fetching the caller profile or a specified user profile (self/admin), plus a shared method to save/update the caller profile.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-12",
-      "title": "Capital flow ingestion and retrieval (backend)",
-      "synonyms": [
-        "addCapitalFlow/getAllFlows",
-        "USD→crypto flow storage"
-      ],
-      "description": "Backend supports admin-only insertion of capital flows (USD→crypto) and user queries to fetch a flow by symbol or list all flows, with values formatted to two decimals and timestamps recorded.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-13",
-      "title": "Capital flow querying with live Binance enrichment (frontend)",
-      "synonyms": [
-        "useCapitalFlows",
-        "Flow enrichment"
-      ],
-      "description": "React Query hook fetches all flows from the canister and enriches them with live Binance prices and an intensity proxy computed from price-change percent, using robust symbol matching.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-14",
-      "title": "Capital flow visualization UI with synthetic fallback and market interpretation",
-      "synonyms": [
-        "FlowVisualization",
-        "Synthetic flow generation"
-      ],
-      "description": "Renders flow cards with intensity indicators, totals, and derived percentages. If backend flows are missing, deterministically generates synthetic flows from Binance market data and computes a simple interpretation summary (e.g., capital migrating to BTC).",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-15",
-      "title": "Predictive projections storage with default target levels (backend)",
-      "synonyms": [
-        "addPredictiveProjection",
-        "Default targets"
-      ],
-      "description": "Backend stores PredictiveProjection entries. When targetLevels are null or empty, it generates default target levels based on current asset value, trend, and confidence.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-16",
-      "title": "Predictive projections querying with Binance enrichment (frontend)",
-      "synonyms": [
-        "usePredictiveProjections",
-        "Live trend/confidence update"
-      ],
-      "description": "Fetches projections for a whitelisted symbol set from the backend and enriches them using Binance live data (USD value, trend derived from price change, and a confidence proxy), using symbol normalization for reliable matching.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-17",
-      "title": "Projection validation/sanitization and deterministic target generation utilities",
-      "synonyms": [
-        "sanitizeProjections",
-        "Deterministic targetLevels"
-      ],
-      "description": "Validates projection objects and nested fields, drops invalid entries deterministically, clamps numeric fields, and generates deterministic fallback target levels (at least two) when targets are missing/invalid. Also supports synthetic projection generation from live Binance data.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-18",
-      "title": "Projections render synchronization gate with timeouts",
-      "synonyms": [
-        "useProjectionsSyncGate",
-        "Render gate"
-      ],
-      "description": "Computes readiness for the projections UI by requiring initial Binance data plus backend query settlement, with configurable timeouts to fall back gracefully (synthetic projections or backend-only) and user-facing sync messages.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-19",
-      "title": "Predictive Intelligence UI with safe initial state and synthetic fallback",
-      "synonyms": [
-        "PredictiveIntelligence module",
-        "No black-screen projections"
-      ],
-      "description": "Projections screen never renders unsafe/null payloads: it sanitizes backend results, falls back to synthetic projections from Binance, guarantees deterministic targets per asset, shows a sync loading UI until data is ready, and provides retry + background refresh indicators.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-20",
-      "title": "Confluence zone storage and retrieval (backend)",
-      "synonyms": [
-        "addConfluenceZone/getConfluenceZone",
-        "Zonas de Confluência (backend)"
-      ],
-      "description": "Backend stores confluence zones per symbol, with admin-only insertion and user queries for retrieval.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-21",
-      "title": "Confluence zones querying with volatility enrichment and synthetic generation (frontend)",
-      "synonyms": [
-        "useConfluenceZones",
-        "Synthetic zones"
-      ],
-      "description": "Frontend fetches zones per whitelisted symbol and enriches intensity using average market volatility from Binance data; when backend zones are absent, it generates synthetic zones from significant price-change signals and renders a ranked UI with legend.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-22",
-      "title": "Recovery asset storage and retrieval (backend)",
-      "synonyms": [
-        "addRecoveryAsset/getRecoveryAsset",
-        "Recovery signals backend"
-      ],
-      "description": "Backend stores recovery assets with recovery strength, pattern type, RSI, support levels, and institutional/momentum flags, using admin-only insertion and user queries for retrieval.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-23",
-      "title": "Recovery panel UI with ranking and live enrichment (frontend)",
-      "synonyms": [
-        "RecoveryPanel",
-        "Recovery dashboard"
-      ],
-      "description": "Fetches recovery assets, sorts by recovery strength, and renders ranked cards with conditional styling for momentum breakout vs institutional entry signals. Hook logic enriches strength/volume from live Binance data.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-24",
-      "title": "Predictive performance tracking APIs (backend)",
-      "synonyms": [
-        "PredictionOutcome/ModelPerformance storage",
-        "Performance endpoints"
-      ],
-      "description": "Backend supports admin recording of prediction outcomes, model performance snapshots, and validation result strings; users can query outcomes, model performances, validation results, aggregated predictions, and validation state.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-25",
-      "title": "Performance query hooks with live-price enrichment (frontend)",
-      "synonyms": [
-        "useModelPerformances/usePredictionOutcomes",
-        "Performance data enrichment"
-      ],
-      "description": "React Query hooks fetch backend performance data (summaries, confidence metrics, outcomes, model performances) and update outcome/prediction records with current Binance prices as the live actual value for comparison.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-26",
-      "title": "Performance Preditiva dashboard (frontend)",
-      "synonyms": [
-        "PerformancePreditiva UI",
-        "Prediction/target validation UI"
-      ],
-      "description": "Validates Inteligência Preditiva predictions and target levels against live Binance prices, computes correctness/pending status, deviation, and target hit/miss/pending counts, and renders comparative charts, model rankings, and detailed metrics tabs.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-27",
-      "title": "Regional and institutional primitives with enriched regional metrics (backend + frontend hooks)",
-      "synonyms": [
-        "Regions/correlations/alerts",
-        "useEnrichedRegionalData"
-      ],
-      "description": "Backend defines region configs/coordinates, regions, institutional alerts, and regional correlations, plus query endpoints. Frontend hooks fetch regions/alerts/correlations and compute enriched per-region institutional indicators by combining regional metrics (open interest, funding rate, exchange volume) into normalized signals (institutionalFlowIntensity, fundingBias, aggregatedInterestTrend).",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-28",
-      "title": "Binance-to-backend capital flow sync mutation",
-      "synonyms": [
-        "useSyncBinanceData",
-        "Live ingestion"
-      ],
-      "description": "React Query mutation converts a live Binance ticker (symbol, price, volume) into backend CryptoAsset + flow structures and calls addCapitalFlow, then invalidates cached flow queries on success.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-29",
-      "title": "PWA installability, offline caching, and update utilities",
-      "synonyms": [
-        "Service worker + manifest",
-        "PWAInstallPrompt"
-      ],
-      "description": "Includes a PWA manifest, install prompt utilities (platform detection, install prompt capture, standalone detection, update checking, URL caching requests), a cross-platform PWA install prompt component with dismissal persistence, and a service worker implementing precache + runtime caching with offline fallbacks.",
-      "reqIds": [],
-      "version": 1
-    },
-    {
-      "id": "IF-30",
-      "title": "Android APK packaging guide (Capacitor)",
-      "synonyms": [
-        "APK build documentation",
-        "Capacitor guide"
-      ],
-      "description": "Provides documentation for packaging the PWA as a native Android APK using Capacitor, including prerequisites and build/distribution steps.",
-      "reqIds": [],
       "version": 1
     }
   ],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Rollback para a última versão estável Binance-only e remoção total de qualquer integração/dependência CoinGecko (código, hooks/serviços e env vars), publicando essa versão como nova base",
+      "summary": "Implementar leitura de posições Binance Futures USD‑M via endpoint /fapi/v3/positionRisk e exibir no app",
       "reqIds": [],
-      "status": "in_progress"
+      "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Corrigir a aba Inteligência Preditiva/Projeções para não ficar com tela preta durante o sync inicial (estado inicial seguro, fallback/placeholder e render gate) e garantir targets padrão quando backend não responde",
+      "summary": "Implementar leitura de posições Binance Futures COIN‑M via endpoint /dapi/v1/positionRisk e exibir no app",
       "reqIds": [],
-      "status": "in_progress"
+      "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Performance Preditiva deve validar/medir as recomendações da aba Inteligência Preditiva comparando previsão vs dados reais (acurácia/erro por ativo e resultados históricos)",
+      "summary": "Unificar posições USD‑M e COIN‑M em uma única lista/visualização no dashboard",
       "reqIds": [],
-      "status": "in_progress"
+      "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Completely remove any CoinGecko dependency from the project and restore the application to the last stable Binance-only behavior. This includes removing all CoinGecko-related code paths (services, hooks, utilities, fallbacks), configuration (env vars, constants), and any UI behavior that relies on CoinGecko, so the app runs using only Binance (WebSocket + REST fallback) and existing synthetic fallbacks.",
+      "summary": "Adicionar análises automáticas das posições e dicas (ex.: PnL alto, risco de liquidação próximo, distância do preço de entrada, variação do mark price)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Add backend canister support to read Binance Futures open positions for both USD-M and COIN-M using the user’s stored read-only Binance API credentials, by calling the Binance endpoints `/fapi/v3/positionRisk` (USD-M) and `/dapi/v1/positionRisk` (COIN-M) via HTTPS outcalls.",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-5",
-      "summary": "Publish the resulting Binance-only rollback as the new stable baseline of the project (i.e., the default behavior and code path going forward), with CoinGecko fully removed and not left as dead code.",
+      "id": "AR-6",
+      "summary": "Expose a single backend API that returns a unified, normalized list of open futures positions by merging USD-M and COIN-M positionRisk responses into one common position type (including which market each position came from).",
       "reqIds": [
         "REQ-2"
       ],
       "status": "pending"
     }
   ],
-  "architectural_notes": [
-    "Frontend is React + TypeScript and uses @tanstack/react-query for server-state (periodic refetch, staleTime tuning, placeholderData to reduce UI flicker).",
-    "Market data acquisition is layered: a Binance Futures WebSocket multi-stream client feeds a unified useBinanceData hook; on disconnect/error it falls back to REST polling. The hook maintains a module-level cache to keep data stable across component remounts.",
-    "Backend integration is encapsulated through a useActor hook that creates an ICP canister actor (anonymous or authenticated via Internet Identity) and triggers access-control initialization using a secret token.",
-    "Backend authorization uses an AccessControl module plus a MixinAuthorization mixin. Admin bootstrap is gated by an environment secret (CAFFEINE_ADMIN_TOKEN) and a user-provided secret; role assignment is admin-only.",
-    "Symbol interoperability is handled via dedicated utilities that normalize base/quote symbols (e.g., BTC vs BTCUSDT) and provide deterministic target-level multipliers for stable fallback rendering.",
-    "Projections module follows a resilience pattern: sanitize/validate backend payloads, render deterministic defaults when fields are missing, generate synthetic projections/targets from Binance data when backend is unavailable, and gate rendering until Binance+backend reach a “settled” synchronization state.",
-    "PWA architecture includes a manifest and a custom service worker with precache + runtime caches and request-specific cache strategies (cache-first for static/pages; network-first with cache fallback for Binance/canister calls).",
-    "Motoko backend primarily uses in-memory Maps/Sets for state (flows, projections, zones, recovery assets, performance state, regional data), implying upgrade persistence is not implemented by default.",
-    "Decisão de produto: manter o app Binance-only (evitar dependências de CoinGecko/CoinGlass/CryptoQuant) para reduzir instabilidade/complexidade e preservar coerência com as métricas existentes.",
-    "A aba Inteligência Preditiva precisa de renderização resiliente no primeiro sync (gates/estados seguros/fallbacks) para evitar blackout quando queries alternam entre loading/empty/error."
-  ],
-  "known_issues": [
-    "frontend/src/hooks/useQueries.ts: useRegionalFlows() is intentionally stubbed and always returns an empty array; backend lacks an endpoint to support it.",
-    "frontend/src/components/GlobalFlowRadar.tsx is empty, despite the presence of backend types and frontend hooks for regional/alert/correlation data; the regional visualization UI is effectively missing/incomplete.",
-    "backend/main.mo: most state is stored in in-memory Maps without stable persistence; canister upgrades will lose stored data unless stable variables/migrations are added.",
-    "backend/authorization/MixinAuthorization.mo: _initializeAccessControlWithSecret traps if CAFFEINE_ADMIN_TOKEN is not set, making deployment configuration mandatory for authenticated sessions.",
-    "backend/authorization/access-control.mo: getUserRole() traps for non-anonymous principals that have not been initialized, which can break callers that query roles before initialization completes.",
-    "backend/main.mo: getRegionalMetric(), getRegionalCryptoAsset(), and getDayFlowRange() return hardcoded/sample data (including empty flow ranges) rather than real persisted/computed metrics.",
-    "backend/main.mo: getPerformanceSummary() returns placeholder averages (0.0) and attempts modelPerformance.get(symbol) even though the map is keyed by modelName, so highest/lowest performer logic is incorrect.",
-    "backend/main.mo: regions are not pre-seeded; getRegion() traps unless addRegion() is called by an admin. Frontend useRegions() silently skips missing regions and typically returns an empty list.",
-    "frontend/src/components/Header.tsx uses dynamic Tailwind class construction with opacity variants (e.g., bg-${statusColor}/10, border-${statusColor}/30). The Tailwind safelist includes only base neon classes, so opacity variants may be missing in production builds.",
-    "frontend/src/hooks/useBinanceData.ts and frontend/src/lib/binanceService.ts use NodeJS.Timeout types in browser code; this can cause TypeScript typing mismatches depending on tsconfig/lib typings.",
-    "frontend/src/service-worker.ts only handles cross-origin requests for binance.com; if the canister API is served from a different origin (e.g., *.ic0.app) rather than same-origin routing, requests may be skipped from offline caching/fallback behavior.",
-    "frontend/src/service-worker.ts precache list references many generated assets; missing files will cause precache errors (caught/ignored), potentially leading to incomplete offline experience.",
-    "Inconsistent whitelists: frontend/src/lib/binanceService.ts streams 5 symbols, while frontend/src/lib/symbols.ts defines a longer whitelist used by some backend queries; some symbols may never receive live Binance enrichment.",
-    "backend/main.mo computeDefaultTargetLevels() only recognizes trend strings \"bullish\"/\"bearish\", while the frontend commonly uses Portuguese labels (\"Alta\"/\"Baixa\"); backend default targets may not reflect the intended trend semantics unless trends are normalized.",
-    "Aba Inteligência Preditiva/Projeções apresenta tela preta/intermitência no início da sincronização (loading/sync), com render quebrando por poucos segundos e podendo não exibir targets padrão; sugere falha no ciclo de render/normalização de payload inicial."
-  ],
-  "isFixRequest": true,
-  "gameProjectType": "none",
-  "projectName": "Crypto Flow",
+  "projectName": "Enable unified Binance Futures (USD-M + COIN-M) positions reading and automated position insights",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

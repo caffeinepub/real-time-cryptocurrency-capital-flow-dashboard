@@ -1,45 +1,69 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-04T11:46:02.680Z",
+  "generatedAt": "2026-02-09T11:51:49.562Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 0,
+    "total": 5,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Completely remove any CoinGecko dependency from the project and restore the application to the last stable Binance-only behavior. This includes removing all CoinGecko-related code paths (services, hooks, utilities, fallbacks), configuration (env vars, constants), and any UI behavior that relies on CoinGecko, so the app runs using only Binance (WebSocket + REST fallback) and existing synthetic fallbacks.",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/hooks/useBinanceData.ts",
-          "frontend/src/lib/binanceService.ts",
-          "frontend/src/lib/coingeckoService.ts",
-          "frontend/src/hooks/useCoinGeckoData.ts",
-          "frontend/src/lib/coingecko.ts",
-          "frontend/src/lib/marketDataProvider.ts",
-          "frontend/src/components/FlowVisualization.tsx",
-          "frontend/src/components/PredictiveIntelligence.tsx",
-          "frontend/src/components/ConfluenceZones.tsx"
-        ],
+        "summary": "Add backend canister support to read Binance Futures open positions for both USD-M and COIN-M using the user’s stored read-only Binance API credentials, by calling the Binance endpoints `/fapi/v3/positionRisk` (USD-M) and `/dapi/v1/positionRisk` (COIN-M) via HTTPS outcalls.",
+        "status": "unknown",
+        "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Publish the resulting Binance-only rollback as the new stable baseline of the project (i.e., the default behavior and code path going forward), with CoinGecko fully removed and not left as dead code.",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/package.json",
-          "frontend/.env",
-          "frontend/.env.example",
-          "frontend/src/App.tsx",
-          "frontend/src/lib/marketDataProvider.ts"
-        ],
+        "summary": "Expose a single backend API that returns a unified, normalized list of open futures positions by merging USD-M and COIN-M positionRisk responses into one common position type (including which market each position came from).",
+        "status": "unknown",
+        "plannedFiles": [],
         "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Implement frontend React Query hooks to fetch the unified futures positions from the backend, with a manual “Refresh” action and a safe polling interval suitable for monitoring (e.g., periodic refetch while the Futures Dashboard is visible).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useOpenFuturesPositions.ts",
+          "frontend/src/components/FuturesDashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useOpenFuturesPositions.ts",
+          "frontend/src/components/FuturesDashboard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Replace the current placeholder “Open Positions” panel in `frontend/src/components/FuturesDashboard.tsx` with a unified positions table/list view that displays key position fields for both USD-M and COIN-M in one list (at minimum: symbol, side/position amount, entry price, mark price, unrealized PnL, leverage, liquidation price when available, and market type).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/OpenPositionsTable.tsx",
+          "frontend/src/lib/futuresPositionFormat.ts",
+          "frontend/src/components/FuturesDashboard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/OpenPositionsTable.tsx",
+          "frontend/src/lib/futuresPositionFormat.ts",
+          "frontend/src/components/FuturesDashboard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Add automated position analysis and simple management tips in the frontend based on the unified position data, including at least: high unrealized PnL suggesting taking partial profit, liquidation price proximity warnings, large distance between entry price and mark price, and mark price movement/volatility hints. Display these tips per-position (and optionally a small summary).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/positionInsights.ts",
+          "frontend/src/components/OpenPositionsTable.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/positionInsights.ts",
+          "frontend/src/components/OpenPositionsTable.tsx"
+        ]
       }
     ]
   },
@@ -47,7 +71,18 @@
     "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/FuturesDashboard.tsx",
+    "frontend/src/components/OpenPositionsTable.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useOpenFuturesPositions.ts",
+    "frontend/src/lib/futuresPositionFormat.ts",
+    "frontend/src/lib/positionInsights.ts",
+    "frontend/src/utils/urlParams.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
