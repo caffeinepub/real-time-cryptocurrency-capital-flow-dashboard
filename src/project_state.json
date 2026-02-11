@@ -1,37 +1,28 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "App para visualizar e analisar posições de futuros da Binance (USD‑M e COIN‑M) usando API key somente leitura, com lista unificada e dicas automáticas de gestão/riscos.",
+  "summary": "New project",
   "architectural_notes": [
-    "Usar API Binance Futures USD‑M (/fapi/v3/positionRisk) e COIN‑M (/dapi/v1/positionRisk) para buscar posições.",
-    "API key configurada como somente leitura; foco inicial em visualização/análise (sem execução de ordens)."
+    "Aplicativo utiliza múltiplas chaves de API; necessário padronizar onde são definidas/lidas (front e back-end) e como são selecionadas por ambiente/serviço."
   ],
   "known_issues": [
-    "Dashboard/aba de posições ainda não realiza leitura real de dados da Binance (integração de leitura pendente)."
+    "Nova aba 'monitor de fluxo de ordens' fica preta ~1s após abrir, aparentemente quando o front-end tenta se comunicar com o back-end (possível problema na integração/uso de chaves de API)."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-implement-frontend-react-query-hooks-to-fetch-the-unified-futures-positions-from-the-backend-with-a-manual-refresh-action-and-a-safe-polling-interval-suitable-for-monitoring-e-g-periodic-refetch-while-the-futures-dashboard-is-visible",
-      "title": "Implement frontend React Query hooks to fetch the unified futures positions from the backend, with a manual “Refresh” action and a safe polling interval suitable for monitoring (e.g., periodic refetch while the Futures Dashboard is visible).",
+      "id": "feature-prevent-the-order-flow-monitor-ui-from-crashing-black-screen-when-binance-rest-responses-are-missing-empty-or-when-saved-localstorage-settings-are-malformed-by-adding-defensive-parsing-guards-and-a-user-visible-error-fallback-instead-of-an-unhandled-react-render-error",
+      "title": "Prevent the \"Order Flow Monitor\" UI from crashing (black screen) when Binance REST responses are missing/empty or when saved localStorage settings are malformed, by adding defensive parsing/guards and a user-visible error fallback instead of an unhandled React render error.",
       "reqIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-replace-the-current-placeholder-open-positions-panel-in-frontend-src-components-futuresdashboard-tsx-with-a-unified-positions-table-list-view-that-displays-key-position-fields-for-both-usd-m-and-coin-m-in-one-list-at-minimum-symbol-side-position-amount-entry-price-mark-price-unrealized-pnl-leverage-liquidation-price-when-available-and-market-type",
-      "title": "Replace the current placeholder “Open Positions” panel in `frontend/src/components/FuturesDashboard.tsx` with a unified positions table/list view that displays key position fields for both USD-M and COIN-M in one list (at minimum: symbol, side/position amount, entry price, mark price, unrealized PnL, leverage, liquidation price when available, and market type).",
+      "id": "feature-audit-and-align-frontend-vs-backend-binance-api-usage-so-the-app-does-not-mix-inconsistent-base-domains-endpoints-and-clearly-separates-public-no-key-vs-private-key-secret-calls-ensure-the-frontend-order-flow-tab-never-requires-binance-api-keys-to-fetch-public-market-data",
+      "title": "Audit and align frontend vs backend Binance API usage so the app does not mix inconsistent base domains/endpoints and clearly separates public (no key) vs private (key/secret) calls; ensure the frontend order-flow tab never requires Binance API keys to fetch public market data.",
       "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-automated-position-analysis-and-simple-management-tips-in-the-frontend-based-on-the-unified-position-data-including-at-least-high-unrealized-pnl-suggesting-taking-partial-profit-liquidation-price-proximity-warnings-large-distance-between-entry-price-and-mark-price-and-mark-price-movement-volatility-hints-display-these-tips-per-position-and-optionally-a-small-summary",
-      "title": "Add automated position analysis and simple management tips in the frontend based on the unified position data, including at least: high unrealized PnL suggesting taking partial profit, liquidation price proximity warnings, large distance between entry price and mark price, and mark price movement/volatility hints. Display these tips per-position (and optionally a small summary).",
-      "reqIds": [
-        "REQ-5"
+        "REQ-2"
       ],
       "version": 1
     }
@@ -39,46 +30,20 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Implementar leitura de posições Binance Futures USD‑M via endpoint /fapi/v3/positionRisk e exibir no app",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Implementar leitura de posições Binance Futures COIN‑M via endpoint /dapi/v1/positionRisk e exibir no app",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Unificar posições USD‑M e COIN‑M em uma única lista/visualização no dashboard",
+      "summary": "Auditar integração de APIs no front-end e back-end (leitura/uso de múltiplas chaves de API) e corrigir inconsistências que causam falha na nova aba.",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "Adicionar análises automáticas das posições e dicas (ex.: PnL alto, risco de liquidação próximo, distância do preço de entrada, variação do mark price)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Add backend canister support to read Binance Futures open positions for both USD-M and COIN-M using the user’s stored read-only Binance API credentials, by calling the Binance endpoints `/fapi/v3/positionRisk` (USD-M) and `/dapi/v1/positionRisk` (COIN-M) via HTTPS outcalls.",
+      "summary": "Fix backend Binance private API implementation inconsistencies: remove placeholder example positions and implement real fetching/parsing for open futures positions using the stored apiKey/apiSecret (including required signing if the endpoint requires it), returning normalized positions consistent with the frontend types.",
       "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Expose a single backend API that returns a unified, normalized list of open futures positions by merging USD-M and COIN-M positionRisk responses into one common position type (including which market each position came from).",
-      "reqIds": [
-        "REQ-2"
+        "REQ-3"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Enable unified Binance Futures (USD-M + COIN-M) positions reading and automated position insights",
+  "projectName": "Audit and fix API integration inconsistencies causing the Order Flow Monitor tab to go black",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -1,138 +1,75 @@
 {
   "kind": "build_request",
-  "title": "Enable unified Binance Futures (USD-M + COIN-M) positions reading and automated position insights",
+  "title": "Audit and fix API integration inconsistencies causing the Order Flow Monitor tab to go black",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add backend canister support to read Binance Futures open positions for both USD-M and COIN-M using the user’s stored read-only Binance API credentials, by calling the Binance endpoints `/fapi/v3/positionRisk` (USD-M) and `/dapi/v1/positionRisk` (COIN-M) via HTTPS outcalls.",
-      "target": "backend",
+      "text": "Prevent the \"Order Flow Monitor\" UI from crashing (black screen) when Binance REST responses are missing/empty or when saved localStorage settings are malformed, by adding defensive parsing/guards and a user-visible error fallback instead of an unhandled React render error.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-9",
-          "msg-13",
-          "msg-16"
+          "msg-1"
         ],
         "quotes": [
-          "Eu faco trades.. nos futuros... usd-m e coin-m.",
-          "Agora vamos preparar a aba para analisar minhas posicoes, e gerencia-las dando dicas",
-          "Sim."
+          "Reveja o codigo.. e busque por inconsistências..  no front e back end relacionados a api"
         ]
       },
       "acceptanceCriteria": [
-        "When the caller has stored Binance credentials, the canister can successfully perform authenticated HTTPS requests to both `/fapi/v3/positionRisk` and `/dapi/v1/positionRisk` and return parsed position data.",
-        "When the caller has no stored Binance credentials, the method(s) trap with a clear error indicating missing credentials.",
-        "Requests include required Binance authentication elements (timestamp and signature) and send the API key via `X-MBX-APIKEY` header.",
-        "No credential values are returned to the frontend and are never logged."
+        "If Binance endpoints fail or return unexpected shapes (e.g., bookTicker is null, recentTrades is empty), the OrderFlowMonitor still renders and shows an in-panel error/empty-state message (no blank/black content area).",
+        "If localStorage contains invalid JSON for orderFlowThresholds/confluenceThresholds/alertThresholds, the component falls back to defaults without throwing.",
+        "A thrown runtime error inside OrderFlowMonitor no longer results in a blank page; a fallback UI is displayed with a retry action (e.g., refresh/refetch)."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Expose a single backend API that returns a unified, normalized list of open futures positions by merging USD-M and COIN-M positionRisk responses into one common position type (including which market each position came from).",
-      "target": "backend",
+      "text": "Audit and align frontend vs backend Binance API usage so the app does not mix inconsistent base domains/endpoints and clearly separates public (no key) vs private (key/secret) calls; ensure the frontend order-flow tab never requires Binance API keys to fetch public market data.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-14",
-          "msg-15"
+          "msg-1"
         ],
         "quotes": [
-          "Unidos",
-          "Perfeito — vamos unir as posições USD‑M e COIN‑M em uma única lista."
+          "Reveja o codigo.. e busque por inconsistências..  no front e back end relacionados a api"
         ]
       },
       "acceptanceCriteria": [
-        "The backend returns a single array of positions that includes data from both USD-M and COIN-M.",
-        "Each returned position includes a field identifying its market (USD-M vs COIN-M).",
-        "Positions that have zero size are filtered out (no-position entries from Binance are not shown as open positions)."
+        "Frontend order-flow data fetching continues to use only public Binance endpoints and does not read/send stored Binance credentials for those calls.",
+        "Backend private Binance calls use a consistent Binance domain strategy (no unexplained mismatch like api1.binance.com vs api.binance.com without fallback/justification in code comments).",
+        "Any place where API keys are used is centralized and documented in code comments (what endpoint requires it, and what headers/signature are applied)."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Implement frontend React Query hooks to fetch the unified futures positions from the backend, with a manual “Refresh” action and a safe polling interval suitable for monitoring (e.g., periodic refetch while the Futures Dashboard is visible).",
-      "target": "frontend",
+      "text": "Fix backend Binance private API implementation inconsistencies: remove placeholder example positions and implement real fetching/parsing for open futures positions using the stored apiKey/apiSecret (including required signing if the endpoint requires it), returning normalized positions consistent with the frontend types.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-16",
-          "msg-18"
+          "msg-1"
         ],
         "quotes": [
-          "Sim.",
-          "Refresh"
+          "Reveja o codigo.. e busque por inconsistências..  no front e back end relacionados a api"
         ]
       },
       "acceptanceCriteria": [
-        "When Binance credentials are configured, the Futures Dashboard loads positions from the backend and shows a loading state during fetch.",
-        "Clicking the “Refresh” button triggers an immediate refetch and updates the UI.",
-        "Polling/refetching does not run when the user is not authenticated or when credentials are missing.",
-        "Errors from the backend are displayed in the UI in English with an actionable message (e.g., missing credentials, Binance request failed)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Replace the current placeholder “Open Positions” panel in `frontend/src/components/FuturesDashboard.tsx` with a unified positions table/list view that displays key position fields for both USD-M and COIN-M in one list (at minimum: symbol, side/position amount, entry price, mark price, unrealized PnL, leverage, liquidation price when available, and market type).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-14",
-          "msg-16"
-        ],
-        "quotes": [
-          "Unidos",
-          "Sim."
-        ]
-      },
-      "acceptanceCriteria": [
-        "The Open Positions section shows a unified list combining USD-M and COIN-M positions.",
-        "Each row clearly indicates whether the position is USD-M or COIN-M.",
-        "If there are no open positions, the UI shows an explicit empty state (in English) rather than placeholder text.",
-        "Displayed numeric values are formatted consistently and remain readable in the existing neon/dark theme."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Add automated position analysis and simple management tips in the frontend based on the unified position data, including at least: high unrealized PnL suggesting taking partial profit, liquidation price proximity warnings, large distance between entry price and mark price, and mark price movement/volatility hints. Display these tips per-position (and optionally a small summary).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-13",
-          "msg-16"
-        ],
-        "quotes": [
-          "Agora vamos preparar a aba para analisar minhas posicoes, e gerencia-las dando dicas",
-          "Sim."
-        ]
-      },
-      "acceptanceCriteria": [
-        "For each open position, the UI can display zero or more generated “insights”/tips derived from the live position fields.",
-        "Tips include at least these categories: (1) high PnL suggestion, (2) liquidation risk proximity, (3) entry vs mark distance, (4) mark price movement hint.",
-        "Tips are deterministic from the data (same input => same output) and do not require any external AI/LLM integration.",
-        "The UI copy is in English and uses cautious language (e.g., “Consider…”, “Risk: …”) rather than claiming certainty."
+        "backend/main.mo no longer returns hardcoded example positions from fetchPositions; it returns parsed data from Binance when possible.",
+        "When credentials are missing, backend errors remain explicit and consistent (e.g., \"No Binance credentials found for user\").",
+        "When Binance rejects the request (e.g., auth/signature issues), the backend returns a clear error message that the frontend can surface (not silent success with fake data).",
+        "The frontend hook useOpenFuturesPositions continues to work with the backend response shape (NormalizedFuturesPosition[]) without runtime type errors."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under `frontend/src/components/ui` (compose existing shadcn components instead).",
-    "Do not edit any frontend paths listed as immutable in SYSTEM_CONTEXT (e.g., `frontend/src/hooks/useInternetIdentity.ts(x)`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`).",
-    "Backend must remain a single Motoko actor in `backend/main.mo`; only add a `backend/migration.mo` if state schema changes require it.",
-    "Do not introduce non-supported technologies (no external databases, no WebSockets-based backend, no third-party auth besides Internet Identity)."
+    "Do not edit any files under frontend/src/components/ui or other paths listed in frontend.immutablePaths.",
+    "Keep all backend logic in the single actor in backend/main.mo; only add backend/migration.mo if state schema changes require it."
   ],
   "nonGoals": [
-    "Executing trades, placing orders, or any write-capable Binance actions (read-only monitoring only).",
-    "Adding push notifications, SMS, email alerts, or real-time chat.",
-    "Adding third-party AI/LLM integrations for generating tips."
+    "Adding third-party authentication providers (only Internet Identity is supported).",
+    "Adding external databases or non-IC backend services.",
+    "Implementing real-time WebSocket streaming between frontend and the IC canister (polling is acceptable)."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

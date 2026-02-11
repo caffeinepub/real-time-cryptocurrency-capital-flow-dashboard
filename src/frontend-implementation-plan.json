@@ -1,76 +1,82 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Unified Futures Positions UI (fetch, refresh, polling, table, and deterministic insights)",
+  "title": "Stabilize Order Flow Monitor by hardening parsing, adding error fallbacks, and clarifying public Binance REST usage",
   "requirements": [
     {
-      "id": "REQ-3",
-      "summary": "Add React Query hook to fetch unified futures positions with manual refresh and safe polling while Futures Dashboard is visible.",
+      "id": "REQ-1",
+      "summary": "Add defensive parsing/guards and an in-panel error fallback (with retry) so OrderFlowMonitor never renders as a black screen on malformed localStorage or missing/empty Binance REST data.",
       "acceptanceCriteria": [
-        "When Binance credentials are configured, the Futures Dashboard loads positions from the backend and shows a loading state during fetch.",
-        "Clicking the “Refresh” button triggers an immediate refetch and updates the UI.",
-        "Polling/refetching does not run when the user is not authenticated or when credentials are missing.",
-        "Errors from the backend are displayed in the UI in English with an actionable message (e.g., missing credentials, Binance request failed)."
+        "If Binance endpoints fail or return unexpected shapes (e.g., bookTicker is null, recentTrades is empty), the OrderFlowMonitor still renders and shows an in-panel error/empty-state message (no blank/black content area).",
+        "If localStorage contains invalid JSON for orderFlowThresholds/confluenceThresholds/alertThresholds, the component falls back to defaults without throwing.",
+        "A thrown runtime error inside OrderFlowMonitor no longer results in a blank page; a fallback UI is displayed with a retry action (e.g., refresh/refetch)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useOpenFuturesPositions.ts",
+          "path": "frontend/src/utils/safeJson.ts",
           "operation": "create",
-          "description": "Create a dedicated React Query hook that calls the backend actor getOpenFuturesPositions() and supports: (1) manual refetch, (2) safe polling (refetchInterval) only when the Futures Dashboard is mounted/visible, (3) query enablement gated by Internet Identity authentication state and hasBinanceCredentials(), and (4) standardized error mapping to English actionable messages. Use the core-infrastructure actor access pattern (via existing useActor). Verify the component's usage instructions before implementing."
+          "description": "Add small helpers to safely parse JSON (try/catch) and validate/merge objects with defaults for localStorage-backed settings (orderFlowThresholds, confluenceThresholds, alertThresholds)."
         },
         {
-          "path": "frontend/src/components/FuturesDashboard.tsx",
+          "path": "frontend/src/components/OrderFlowErrorBoundary.tsx",
+          "operation": "create",
+          "description": "Create a React error boundary wrapper for OrderFlowMonitor that renders a user-visible fallback UI (within the tab content area) and provides a retry action to reset the boundary and trigger a refetch. Use existing shadcn-ui components already available in the project; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/OrderFlowMonitor.tsx",
           "operation": "modify",
-          "description": "Wire the new useOpenFuturesPositions hook into the dashboard: show a loading state during fetch, connect the existing Refresh button to query.refetch(), and ensure polling is enabled only when the user is authenticated and Binance credentials exist (otherwise disabled). Surface any backend errors as an English alert with next-step guidance (e.g., configure credentials / retry). Use existing shadcn-ui components (e.g., Alert, Button) without editing files under frontend/src/components/ui. Verify the component's usage instructions before implementing."
+          "description": "Harden OrderFlowMonitor against runtime crashes: replace direct JSON.parse(localStorage) with safe parsing + defaults, guard analysis computations when recentTrades is empty or bookTicker is null/invalid, and render an explicit empty-state panel (with retry/refetch) when analysis cannot be computed. Use existing shadcn-ui components already imported in this file; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/lib/binanceOrderFlowRest.ts",
+          "operation": "modify",
+          "description": "Make REST fetchers return safe defaults for unexpected/empty payloads (e.g., ensure recentTrades is always an array; ensure bookTicker is either a valid object or null; treat empty arrays as null) so downstream render/analysis never throws."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wrap the OrderFlowMonitor render path(s) with the new OrderFlowErrorBoundary (both multi-module mode and the single-tab FuturesMonitorTabSurface path if needed via composition) so any runtime render errors show a fallback UI instead of a blank page."
+        },
+        {
+          "path": "frontend/src/surfaces/FuturesMonitorTabSurface.tsx",
+          "operation": "modify",
+          "description": "Ensure the standalone Order Flow Monitor surface also uses the OrderFlowErrorBoundary wrapper so errors are contained to an in-page fallback with a retry action. Use existing shadcn-ui components if needed; verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-4",
-      "summary": "Replace the placeholder Open Positions panel with a unified USD-M + COIN-M positions table/list showing key fields and market type.",
+      "id": "REQ-2",
+      "summary": "Align frontend Binance usage to a consistent public-domain strategy and ensure order-flow fetching never uses/stores/sends Binance API keys for public market data calls.",
       "acceptanceCriteria": [
-        "The Open Positions section shows a unified list combining USD-M and COIN-M positions.",
-        "Each row clearly indicates whether the position is USD-M or COIN-M.",
-        "If there are no open positions, the UI shows an explicit empty state (in English) rather than placeholder text.",
-        "Displayed numeric values are formatted consistently and remain readable in the existing neon/dark theme."
+        "Frontend order-flow data fetching continues to use only public Binance endpoints and does not read/send stored Binance credentials for those calls.",
+        "Backend private Binance calls use a consistent Binance domain strategy (no unexplained mismatch like api1.binance.com vs api.binance.com without fallback/justification in code comments).",
+        "Any place where API keys are used is centralized and documented in code comments (what endpoint requires it, and what headers/signature are applied)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/OpenPositionsTable.tsx",
+          "path": "frontend/src/lib/binanceDomains.ts",
           "operation": "create",
-          "description": "Add a reusable OpenPositionsTable component that renders the unified positions list in a readable neon/dark theme-friendly layout (table or list). Display at minimum: symbol, positionSide/positionAmt, entryPrice, markPrice, pnl (unrealized), leverage, liquidationPrice (when present/meaningful), and market type (USD-M vs COIN-M). Use existing shadcn-ui building blocks (e.g., Card/Table/Badge if available, otherwise semantic markup + existing Tailwind utilities) without modifying frontend/src/components/ui. Verify the component's usage instructions before implementing."
+          "description": "Centralize Binance base-domain constants for FRONTEND public market data only (spot REST, futures REST, futures WS) and add clear code comments distinguishing public (no key) usage. Keep this file explicitly free of any API-key logic."
         },
         {
-          "path": "frontend/src/lib/futuresPositionFormat.ts",
-          "operation": "create",
-          "description": "Create formatting helpers for futures positions to keep numeric output consistent and readable (e.g., price, size, leverage, PnL), with English-friendly formatting where appropriate, and safe handling of missing/zero liquidation price. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/FuturesDashboard.tsx",
+          "path": "frontend/src/lib/binanceOrderFlowRest.ts",
           "operation": "modify",
-          "description": "Replace the current Open Positions placeholder content with the new OpenPositionsTable component wired to the unified positions query data. Add an explicit empty state message in English when the returned list is empty. Ensure the market type is clearly labeled per row (USD-M / COIN-M) and formatting uses the shared helpers. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Generate deterministic per-position insights/tips (no AI) from unified position fields and display them in the Open Positions UI.",
-      "acceptanceCriteria": [
-        "For each open position, the UI can display zero or more generated “insights”/tips derived from the live position fields.",
-        "Tips include at least these categories: (1) high PnL suggestion, (2) liquidation risk proximity, (3) entry vs mark distance, (4) mark price movement hint.",
-        "Tips are deterministic from the data (same input => same output) and do not require any external AI/LLM integration.",
-        "The UI copy is in English and uses cautious language (e.g., “Consider…”, “Risk: …”) rather than claiming certainty."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/lib/positionInsights.ts",
-          "operation": "create",
-          "description": "Implement deterministic insight generation utilities for a NormalizedFuturesPosition. Include rules for: high unrealized PnL (suggest partial profit-taking), liquidation proximity (risk warning based on distance between mark and liquidation adjusted for side), large entry vs mark distance (position drift note), and mark price movement/volatility hint (e.g., large % move from entry implying elevated volatility/need to review risk). Ensure outputs are stable, purely data-driven, and English cautious wording. Verify the component's usage instructions before implementing."
+          "description": "Refactor to use shared public-domain constants (from binanceDomains.ts), add comments clarifying these are public/no-key calls, and ensure no request code reads from localStorage or interacts with the backend/credentials."
         },
         {
-          "path": "frontend/src/components/OpenPositionsTable.tsx",
+          "path": "frontend/src/lib/binanceService.ts",
           "operation": "modify",
-          "description": "Integrate the insight generator to display zero or more tips per position (e.g., below the row or in a dedicated column/section). Optionally add a small summary (e.g., count of positions with liquidation warnings / high PnL) without introducing new top-level routes. Use existing shadcn-ui components for visual emphasis where appropriate, without editing frontend/src/components/ui. Verify the component's usage instructions before implementing."
+          "description": "Refactor WebSocket + REST fallback base URLs to use the shared public-domain constants (from binanceDomains.ts) and add comments clarifying no API keys are ever sent from the frontend for market data."
+        },
+        {
+          "path": "frontend/src/hooks/useBinanceOrderFlow.ts",
+          "operation": "modify",
+          "description": "Add a brief in-code contract comment that this hook performs only public market data fetching and must never depend on Binance credentials. Ensure error messages remain user-safe and do not suggest adding API keys for order-flow data."
+        },
+        {
+          "path": "frontend/src/components/BinanceCredentialsPanel.tsx",
+          "operation": "modify",
+          "description": "Update copy/comments to clearly communicate that Binance credentials are for private account features (e.g., futures positions) and are not required for public Order Flow Monitor market data. Use existing shadcn-ui components already present in this file; verify the component's usage instructions before implementing."
         }
       ]
     }

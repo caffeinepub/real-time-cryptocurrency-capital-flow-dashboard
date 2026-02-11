@@ -628,17 +628,12 @@ actor {
   ////////////////////////////
   //   QUERY FUNCTIONS      //
   ////////////////////////////
-  public query ({ caller }) func getCachedSymbols() : async [Text] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access cached symbols");
-    };
+  // PUBLIC MARKET DATA - No authentication required (guests can access)
+  public query func getCachedSymbols() : async [Text] {
     binanceSymbols.keys().toArray();
   };
 
-  public query ({ caller }) func getCachedPrices() : async [PriceTicker] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access cached prices");
-    };
+  public query func getCachedPrices() : async [PriceTicker] {
     priceCache.values().toArray();
   };
 
@@ -751,10 +746,8 @@ actor {
     recoveryData.add(symbol, asset);
   };
 
-  public query ({ caller }) func getCapitalFlow(symbol : Text) : async CapitalFlow {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access capital flow data");
-    };
+  // PUBLIC DATA - No authentication required (guests can access)
+  public query func getCapitalFlow(symbol : Text) : async CapitalFlow {
     switch (flowData.get(symbol)) {
       case (null) {
         Runtime.trap("Capital flow not found");
@@ -763,10 +756,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getPredictiveProjection(symbol : Text) : async PredictiveProjection {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access predictive projections");
-    };
+  public query func getPredictiveProjection(symbol : Text) : async PredictiveProjection {
     switch (predictiveData.get(symbol)) {
       case (null) {
         Runtime.trap("Predictive projection not found");
@@ -775,10 +765,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getConfluenceZone(symbol : Text) : async ConfluenceZone {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access confluence zones");
-    };
+  public query func getConfluenceZone(symbol : Text) : async ConfluenceZone {
     switch (confluenceData.get(symbol)) {
       case (null) {
         Runtime.trap("Confluence zone not found");
@@ -787,10 +774,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getRecoveryAsset(symbol : Text) : async RecoveryAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access recovery assets");
-    };
+  public query func getRecoveryAsset(symbol : Text) : async RecoveryAsset {
     switch (recoveryData.get(symbol)) {
       case (null) {
         Runtime.trap("Recovery asset not found");
@@ -799,10 +783,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getAllFlows() : async [CapitalFlow] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access flow data");
-    };
+  public query func getAllFlows() : async [CapitalFlow] {
     flowData.values().toArray();
   };
 
@@ -889,10 +870,8 @@ actor {
     summaryStats.add(symbol, { summary; timestamp = Time.now() });
   };
 
-  public query ({ caller }) func getInterpretation(symbol : Text) : async { direction : Text; intensity : Float; summary : Text } {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access interpretations");
-    };
+  // PUBLIC DATA - No authentication required (guests can access)
+  public query func getInterpretation(symbol : Text) : async { direction : Text; intensity : Float; summary : Text } {
     let direction = switch (directionStats.get(symbol)) {
       case (null) { { direction = "none"; intensity = 0.0; lastUpdated = Time.now() } };
       case (?dir) { { direction = dir.direction; intensity = dir.intensity; lastUpdated = dir.lastUpdated } };
@@ -950,31 +929,20 @@ actor {
     regions.add(regionId, newRegion);
   };
 
-  public query ({ caller }) func getRegionCoordinates() : async [(Nat, (Float, Float))] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access region coordinates");
-    };
+  // PUBLIC DATA - No authentication required (guests can access)
+  public query func getRegionCoordinates() : async [(Nat, (Float, Float))] {
     regionCoordinates.toArray();
   };
 
-  public query ({ caller }) func getRegionConfigs() : async [(Nat, RegionalFlowConfig)] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access region configurations");
-    };
+  public query func getRegionConfigs() : async [(Nat, RegionalFlowConfig)] {
     regionConfigs.toArray();
   };
 
-  public query ({ caller }) func getRegionalCorrelations() : async [RegionalCorrelation] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access regional correlations");
-    };
+  public query func getRegionalCorrelations() : async [RegionalCorrelation] {
     regionalCorrelations.values().toArray();
   };
 
-  public query ({ caller }) func getRegion(regionId : Nat) : async Region {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access region data");
-    };
+  public query func getRegion(regionId : Nat) : async Region {
     switch (regions.get(regionId)) {
       case (?region) { region };
       case (null) { Runtime.trap("Região não encontrada") };
@@ -999,27 +967,19 @@ actor {
     institutionalAlerts.add(alertId, alert);
   };
 
-  public query ({ caller }) func getAlertConfig(regionId : Nat) : async AlertConfig {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access alert configurations");
-    };
+  // PUBLIC DATA - No authentication required (guests can access)
+  public query func getAlertConfig(regionId : Nat) : async AlertConfig {
     switch (alertConfigs.get(regionId)) {
       case (?config) { config };
       case (null) { Runtime.trap("Configuração de alertas não encontrada para região " # regionId.toText()) };
     };
   };
 
-  public query ({ caller }) func getInstitutionalAlerts() : async [InstitutionalAlert] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access institutional alerts");
-    };
+  public query func getInstitutionalAlerts() : async [InstitutionalAlert] {
     institutionalAlerts.values().toArray();
   };
 
-  public query ({ caller }) func isCriticalAlertDay(regionId : Nat, dayOfYear : Nat) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can check critical alert days");
-    };
+  public query func isCriticalAlertDay(regionId : Nat, dayOfYear : Nat) : async Bool {
     switch (alertConfigs.get(regionId)) {
       case (?config) {
         let days = config.criticalAlertDays;
@@ -1029,10 +989,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getRegionalMetric(regionId : Nat, metricType : Text) : async RegionalMetric {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access regional metrics");
-    };
+  public query func getRegionalMetric(regionId : Nat, metricType : Text) : async RegionalMetric {
     {
       regionId;
       symbol = "BTCUSDT";
@@ -1042,10 +999,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getRegionalCryptoAsset(regionId : Nat, symbol : Text) : async RegionalCryptoAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access regional crypto assets");
-    };
+  public query func getRegionalCryptoAsset(regionId : Nat, symbol : Text) : async RegionalCryptoAsset {
     {
       regionId;
       symbol;
@@ -1058,10 +1012,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getDayFlowRange(regionId : Nat, dayOfYear : Nat) : async DayFlowRange {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access day flow ranges");
-    };
+  public query func getDayFlowRange(regionId : Nat, dayOfYear : Nat) : async DayFlowRange {
     {
       startTime = Time.now();
       endTime = Time.now();
@@ -1069,10 +1020,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getRegionalFlowConfig(regionId : Nat) : async RegionalFlowConfig {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access regional flow configurations");
-    };
+  public query func getRegionalFlowConfig(regionId : Nat) : async RegionalFlowConfig {
     switch (regionConfigs.get(regionId)) {
       case (?config) { config };
       case (null) { Runtime.trap("Configuração de fluxo regional não encontrada") };
@@ -1177,18 +1125,13 @@ actor {
     };
   };
 
-  public query ({ caller }) func getPredictionOutcomes(symbol : Text) : async [PredictionOutcome] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access prediction outcomes");
-    };
+  // PUBLIC DATA - No authentication required (guests can access)
+  public query func getPredictionOutcomes(symbol : Text) : async [PredictionOutcome] {
     let (_, _, outcomes, _) = getPerformanceState(symbol);
     outcomes;
   };
 
-  public query ({ caller }) func getModelPerformance(symbol : Text, modelName : Text) : async ModelPerformance {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access model performance");
-    };
+  public query func getModelPerformance(symbol : Text, modelName : Text) : async ModelPerformance {
     let (modelPerformance, _, _, _) = getPerformanceState(symbol);
     switch (modelPerformance.get(modelName)) {
       case (?perf) { perf };
@@ -1196,18 +1139,12 @@ actor {
     };
   };
 
-  public query ({ caller }) func getAllModelPerformances(symbol : Text) : async [ModelPerformance] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access model performances");
-    };
+  public query func getAllModelPerformances(symbol : Text) : async [ModelPerformance] {
     let (modelPerformance, _, _, _) = getPerformanceState(symbol);
     modelPerformance.values().toArray();
   };
 
-  public query ({ caller }) func getPerformanceSummary(symbol : Text) : async PerformanceSummary {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access performance summaries");
-    };
+  public query func getPerformanceSummary(symbol : Text) : async PerformanceSummary {
     let (modelPerformance, _, outcomes, _) = getPerformanceState(symbol);
     let outcomeCount = outcomes.size();
     let totalPredictions = if (outcomeCount > 0) { outcomeCount } else { 1 };
@@ -1246,10 +1183,7 @@ actor {
     updatePerformanceState(symbol, (modelPerformance, predictions, outcomes, Map.empty<Text, Time.Time>()));
   };
 
-  public query ({ caller }) func getConfidenceMetrics(symbol : Text) : async ConfidenceMetrics {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access confidence metrics");
-    };
+  public query func getConfidenceMetrics(symbol : Text) : async ConfidenceMetrics {
     {
       assetSymbol = symbol;
       averageConfidence = 82.9;
@@ -1259,10 +1193,7 @@ actor {
     };
   };
 
-  public query ({ caller }) func getValidationResults(symbol : Text, modelName : Text) : async [Text] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access validation results");
-    };
+  public query func getValidationResults(symbol : Text, modelName : Text) : async [Text] {
     let (modelPerformance, _, _, _) = getPerformanceState(symbol);
     switch (modelPerformance.get(modelName)) {
       case (?perf) { perf.validationResults };
@@ -1285,19 +1216,13 @@ actor {
     };
   };
 
-  public query ({ caller }) func getAggregatedPredictions(symbol : Text) : async [AssetOutcomes] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access aggregated predictions");
-    };
+  public query func getAggregatedPredictions(symbol : Text) : async [AssetOutcomes] {
     let (_, _, outcomes, _) = getPerformanceState(symbol);
     let assetSymbols = [symbol];
     assetSymbols.map(func(s) { { assetSymbol = s; predictionOutcomes = outcomes } });
   };
 
-  public query ({ caller }) func getValidationState(symbol : Text) : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access validation state");
-    };
+  public query func getValidationState(symbol : Text) : async Nat {
     let (modelPerformance, _, _, _) = getPerformanceState(symbol);
     modelPerformance.size();
   };

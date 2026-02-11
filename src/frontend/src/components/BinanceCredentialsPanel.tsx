@@ -78,7 +78,8 @@ export default function BinanceCredentialsPanel() {
           )}
         </div>
         <CardDescription>
-          Configure your Binance Futures API credentials to monitor your account
+          Configure your Binance API credentials for private account features (futures positions).
+          Public market data (Order Flow Monitor) does not require credentials.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -87,6 +88,9 @@ export default function BinanceCredentialsPanel() {
           <AlertDescription className="text-xs text-muted-foreground">
             <strong className="text-neon-yellow">Security Notice:</strong> Use read-only API keys when possible. 
             Your credentials are stored securely in your personal canister storage and never exposed in logs or network requests.
+            <br />
+            <strong className="text-neon-cyan mt-2 block">Note:</strong> Binance credentials are only required for private account operations (viewing positions, placing orders). 
+            Public Order Flow Monitor market data does not require API keys.
           </AlertDescription>
         </Alert>
 

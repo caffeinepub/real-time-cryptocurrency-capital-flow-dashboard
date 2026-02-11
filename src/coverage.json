@@ -1,69 +1,61 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T11:51:49.562Z",
+  "generatedAt": "2026-02-11T12:21:59.809Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 5,
-    "implemented": 3,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Add backend canister support to read Binance Futures open positions for both USD-M and COIN-M using the user’s stored read-only Binance API credentials, by calling the Binance endpoints `/fapi/v3/positionRisk` (USD-M) and `/dapi/v1/positionRisk` (COIN-M) via HTTPS outcalls.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Prevent the \"Order Flow Monitor\" UI from crashing (black screen) when Binance REST responses are missing/empty or when saved localStorage settings are malformed, by adding defensive parsing/guards and a user-visible error fallback instead of an unhandled React render error.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/safeJson.ts",
+          "frontend/src/components/OrderFlowErrorBoundary.tsx",
+          "frontend/src/components/OrderFlowMonitor.tsx",
+          "frontend/src/lib/binanceOrderFlowRest.ts",
+          "frontend/src/App.tsx",
+          "frontend/src/surfaces/FuturesMonitorTabSurface.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/safeJson.ts",
+          "frontend/src/components/OrderFlowErrorBoundary.tsx",
+          "frontend/src/components/OrderFlowMonitor.tsx",
+          "frontend/src/lib/binanceOrderFlowRest.ts",
+          "frontend/src/App.tsx",
+          "frontend/src/surfaces/FuturesMonitorTabSurface.tsx"
+        ]
       },
       {
         "id": "REQ-2",
-        "summary": "Expose a single backend API that returns a unified, normalized list of open futures positions by merging USD-M and COIN-M positionRisk responses into one common position type (including which market each position came from).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Audit and align frontend vs backend Binance API usage so the app does not mix inconsistent base domains/endpoints and clearly separates public (no key) vs private (key/secret) calls; ensure the frontend order-flow tab never requires Binance API keys to fetch public market data.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/binanceDomains.ts",
+          "frontend/src/lib/binanceOrderFlowRest.ts",
+          "frontend/src/lib/binanceService.ts",
+          "frontend/src/hooks/useBinanceOrderFlow.ts",
+          "frontend/src/components/BinanceCredentialsPanel.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/binanceDomains.ts",
+          "frontend/src/lib/binanceOrderFlowRest.ts",
+          "frontend/src/lib/binanceService.ts",
+          "frontend/src/hooks/useBinanceOrderFlow.ts",
+          "frontend/src/components/BinanceCredentialsPanel.tsx"
+        ]
       },
       {
         "id": "REQ-3",
-        "summary": "Implement frontend React Query hooks to fetch the unified futures positions from the backend, with a manual “Refresh” action and a safe polling interval suitable for monitoring (e.g., periodic refetch while the Futures Dashboard is visible).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useOpenFuturesPositions.ts",
-          "frontend/src/components/FuturesDashboard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useOpenFuturesPositions.ts",
-          "frontend/src/components/FuturesDashboard.tsx"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Replace the current placeholder “Open Positions” panel in `frontend/src/components/FuturesDashboard.tsx` with a unified positions table/list view that displays key position fields for both USD-M and COIN-M in one list (at minimum: symbol, side/position amount, entry price, mark price, unrealized PnL, leverage, liquidation price when available, and market type).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/OpenPositionsTable.tsx",
-          "frontend/src/lib/futuresPositionFormat.ts",
-          "frontend/src/components/FuturesDashboard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/OpenPositionsTable.tsx",
-          "frontend/src/lib/futuresPositionFormat.ts",
-          "frontend/src/components/FuturesDashboard.tsx"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Add automated position analysis and simple management tips in the frontend based on the unified position data, including at least: high unrealized PnL suggesting taking partial profit, liquidation price proximity warnings, large distance between entry price and mark price, and mark price movement/volatility hints. Display these tips per-position (and optionally a small summary).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/lib/positionInsights.ts",
-          "frontend/src/components/OpenPositionsTable.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/lib/positionInsights.ts",
-          "frontend/src/components/OpenPositionsTable.tsx"
-        ]
+        "summary": "Fix backend Binance private API implementation inconsistencies: remove placeholder example positions and implement real fetching/parsing for open futures positions using the stored apiKey/apiSecret (including required signing if the endpoint requires it), returning normalized positions consistent with the frontend types.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
@@ -73,15 +65,16 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/FuturesDashboard.tsx",
-    "frontend/src/components/OpenPositionsTable.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useOpenFuturesPositions.ts",
-    "frontend/src/lib/futuresPositionFormat.ts",
-    "frontend/src/lib/positionInsights.ts",
+    "frontend/src/App.tsx",
+    "frontend/src/components/BinanceCredentialsPanel.tsx",
+    "frontend/src/components/OrderFlowErrorBoundary.tsx",
+    "frontend/src/components/OrderFlowMonitor.tsx",
+    "frontend/src/hooks/useBinanceOrderFlow.ts",
+    "frontend/src/lib/binanceDomains.ts",
+    "frontend/src/lib/binanceOrderFlowRest.ts",
+    "frontend/src/lib/binanceService.ts",
+    "frontend/src/surfaces/FuturesMonitorTabSurface.tsx",
+    "frontend/src/utils/safeJson.ts",
     "frontend/src/utils/urlParams.ts",
     "project_state.json",
     "scratch/component-selection.json",

@@ -1,13 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Enable reading and displaying unified Binance Futures open positions across USD-M and COIN-M, with basic automated per-position insights.
+**Goal:** Stop the “Order Flow Monitor” tab from going black by hardening the frontend against malformed API/localStorage data, and align frontend/backend Binance API usage so public data never requires keys and private futures positions are fetched consistently.
 
 **Planned changes:**
-- Add backend canister support to call Binance Futures position endpoints `/fapi/v3/positionRisk` (USD-M) and `/dapi/v1/positionRisk` (COIN-M) using stored read-only API credentials, via HTTPS outcalls.
-- Expose a single backend API that merges USD-M and COIN-M position data into one normalized open-positions list (including a market-type field and filtering out zero-size positions).
-- Add frontend React Query hooks to fetch unified positions with a manual “Refresh” action and safe polling while the Futures Dashboard is visible (disabled when unauthenticated or credentials are missing).
-- Replace the placeholder “Open Positions” panel in `frontend/src/components/FuturesDashboard.tsx` with a unified positions table/list showing key fields (symbol, side/amount, entry price, mark price, unrealized PnL, leverage, liquidation price when available, and market type).
-- Add deterministic, data-driven per-position tips/insights in English (e.g., high PnL partial profit suggestion, liquidation proximity warning, entry vs mark distance, and mark price movement/volatility hints).
+- Add defensive parsing/guards in OrderFlowMonitor for missing/empty/unexpected Binance REST response shapes and for malformed localStorage JSON (orderFlowThresholds/confluenceThresholds/alertThresholds), with safe defaults.
+- Add a user-visible in-panel empty/error state for OrderFlowMonitor (instead of a crash/black screen), including a retry/refetch action.
+- Audit and align Binance API usage between frontend and backend: ensure frontend uses only public endpoints for order-flow data and does not read/send stored Binance credentials for those calls.
+- Standardize backend private Binance domain/endpoint strategy and centralize/document where API keys are applied (required headers/signing and which endpoints need them).
+- Replace backend placeholder/hardcoded example futures positions with real open futures positions fetching/parsing using stored apiKey/apiSecret (including signing as required), returning a normalized positions shape compatible with the frontend hook.
 
-**User-visible outcome:** Users can view a single combined list of their USD-M and COIN-M open futures positions, refresh and monitor them, and see simple per-position management insights in English without any trade execution.
+**User-visible outcome:** The Order Flow Monitor remains usable even when Binance returns empty/unexpected data or local settings are corrupted, showing a clear error/empty state with retry, and futures positions reflect real Binance data (or explicit errors) instead of fake placeholders.

@@ -33,15 +33,16 @@ export function getUrlParameter(paramName: string): string | null {
 }
 
 /**
- * Checks if a URL flag parameter exists (regardless of value)
- * Useful for boolean flags like ?tab or ?debug
- *
- * @param paramName - The name of the flag to check
- * @returns true if the parameter exists in the URL, false otherwise
+ * Check if a URL flag is enabled (present with value 'true' or '1', or present without value)
+ * 
+ * @param flagName - The name of the flag to check
+ * @returns True if the flag is enabled, false otherwise
  */
-export function isUrlFlagEnabled(paramName: string): boolean {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.has(paramName);
+export function isUrlFlagEnabled(flagName: string): boolean {
+    const value = getUrlParameter(flagName);
+    if (value === null) return false;
+    if (value === '' || value === 'true' || value === '1') return true;
+    return false;
 }
 
 /**
