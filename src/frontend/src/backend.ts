@@ -104,6 +104,11 @@ export interface TransformationOutput {
     headers: Array<http_header>;
 }
 export type Time = bigint;
+export interface BubbleAssetsResult {
+    count: bigint;
+    lastUpdated: Time;
+    bubbleAssets: Array<BubbleAsset>;
+}
 export interface InstitutionalAlert {
     intensityChange: number;
     type: string;
@@ -239,6 +244,15 @@ export interface ConfluenceZone {
     timestamp: Time;
     intensity: number;
 }
+export interface BubbleAsset {
+    trend: string;
+    name: string;
+    flowIntensity: number;
+    confluenceIntensity: number;
+    confidenceLevel: number;
+    price: number;
+    symbol: string;
+}
 export interface RegionalCryptoAsset {
     marketCap: number;
     name: string;
@@ -314,6 +328,7 @@ export interface backendInterface {
     getAlertConfig(regionId: bigint): Promise<AlertConfig>;
     getAllFlows(): Promise<Array<CapitalFlow>>;
     getAllModelPerformances(symbol: string): Promise<Array<ModelPerformance>>;
+    getBubbleAssets(): Promise<BubbleAssetsResult>;
     getCachedPrices(): Promise<Array<PriceTicker>>;
     getCachedSymbols(): Promise<Array<string>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -634,6 +649,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getAllModelPerformances(arg0);
+            return result;
+        }
+    }
+    async getBubbleAssets(): Promise<BubbleAssetsResult> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getBubbleAssets();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getBubbleAssets();
             return result;
         }
     }

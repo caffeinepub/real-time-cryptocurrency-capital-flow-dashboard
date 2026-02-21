@@ -33,19 +33,6 @@ export function getUrlParameter(paramName: string): string | null {
 }
 
 /**
- * Check if a URL flag is enabled (present with value 'true' or '1', or present without value)
- * 
- * @param flagName - The name of the flag to check
- * @returns True if the flag is enabled, false otherwise
- */
-export function isUrlFlagEnabled(flagName: string): boolean {
-    const value = getUrlParameter(flagName);
-    if (value === null) return false;
-    if (value === '' || value === 'true' || value === '1') return true;
-    return false;
-}
-
-/**
  * Stores a parameter in sessionStorage for persistence across navigation
  * Useful for maintaining state like admin tokens throughout the session
  *

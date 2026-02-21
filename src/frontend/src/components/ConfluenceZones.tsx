@@ -51,9 +51,9 @@ export default function ConfluenceZones() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-neon-green to-neon-cyan bg-clip-text text-transparent">
-            Sistema Dinâmico de Zonas de Confluência
+            Zonas de Confluência
           </h2>
-          <p className="text-muted-foreground mt-1">Visualização em camadas de sinais e indicadores sobrepostos</p>
+          <p className="text-muted-foreground mt-1">Detecção de sinais sobrepostos e indicadores convergentes</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neon-green/10 border border-neon-green/30">
           <Zap className={`w-4 h-4 text-neon-green ${isLive ? 'animate-pulse' : ''}`} />
@@ -98,7 +98,7 @@ export default function ConfluenceZones() {
           <div className="mt-8 bg-card/30 backdrop-blur-sm rounded-xl border border-border/50 p-6">
             <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-neon-cyan" />
-              Legenda das Zonas de Confluência
+              Legenda de Intensidade
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center gap-3">

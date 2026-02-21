@@ -24,6 +24,20 @@ export interface AssetOutcomes {
 }
 export type BinanceFuturesMarket = { 'usdt_m' : null } |
   { 'coin_m' : null };
+export interface BubbleAsset {
+  'trend' : string,
+  'name' : string,
+  'flowIntensity' : number,
+  'confluenceIntensity' : number,
+  'confidenceLevel' : number,
+  'price' : number,
+  'symbol' : string,
+}
+export interface BubbleAssetsResult {
+  'count' : bigint,
+  'lastUpdated' : Time,
+  'bubbleAssets' : Array<BubbleAsset>,
+}
 export interface CapitalFlow {
   'marketImpact' : number,
   'flowIntensity' : number,
@@ -261,6 +275,7 @@ export interface _SERVICE {
   'getAlertConfig' : ActorMethod<[bigint], AlertConfig>,
   'getAllFlows' : ActorMethod<[], Array<CapitalFlow>>,
   'getAllModelPerformances' : ActorMethod<[string], Array<ModelPerformance>>,
+  'getBubbleAssets' : ActorMethod<[], BubbleAssetsResult>,
   'getCachedPrices' : ActorMethod<[], Array<PriceTicker>>,
   'getCachedSymbols' : ActorMethod<[], Array<string>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,

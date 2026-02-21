@@ -75,7 +75,7 @@ export default function FlowVisualization() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
-          <p className="text-muted-foreground">Carregando dados de fluxo...</p>
+          <p className="text-muted-foreground">Carregando dados de fluxo de capital...</p>
         </div>
       </div>
     );
@@ -97,9 +97,9 @@ export default function FlowVisualization() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-neon-cyan to-neon-blue bg-clip-text text-transparent">
-            Visualização de Fluxo USD-para-Cripto
+            Fluxo de Capital
           </h2>
-          <p className="text-muted-foreground mt-1">Fluxos direcionais de capital em tempo real</p>
+          <p className="text-muted-foreground mt-1">Movimentação de capital USD para criptomoedas em tempo real</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neon-cyan/10 border border-neon-cyan/30">
           <Activity className={`w-4 h-4 text-neon-cyan ${isLive ? 'animate-pulse' : ''}`} />
@@ -143,7 +143,7 @@ export default function FlowVisualization() {
       {flowsWithPercentages.length === 0 ? (
         <div className="text-center py-16 bg-card/50 rounded-xl border border-border/50">
           <Activity className="w-16 h-16 mx-auto text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground">Nenhum dado de fluxo disponível ainda</p>
+          <p className="text-muted-foreground">Nenhum dado de fluxo de capital disponível ainda</p>
           <p className="text-sm text-muted-foreground/70 mt-2">
             {isLive ? 'Os dados de fluxo aparecerão aqui em tempo real' : 'Aguardando dados de mercado...'}
           </p>

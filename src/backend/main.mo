@@ -1,27 +1,20 @@
 import Map "mo:core/Map";
-import Set "mo:core/Set";
 import Array "mo:core/Array";
+import Runtime "mo:core/Runtime";
+import Time "mo:core/Time";
+import Principal "mo:core/Principal";
+import Set "mo:core/Set";
+import Iter "mo:core/Iter";
 import Float "mo:core/Float";
 import Int "mo:core/Int";
-import Iter "mo:core/Iter";
-import Time "mo:core/Time";
-import Runtime "mo:core/Runtime";
-import Principal "mo:core/Principal";
 import OutCall "http-outcalls/outcall";
-
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
 actor {
-  /////////////////////////////////////
-  //      ACCESS CONTROL INIT        //
-  /////////////////////////////////////
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  /////////////////////////////////////
-  //         USER PROFILES           //
-  /////////////////////////////////////
   public type UserProfile = {
     name : Text;
     email : ?Text;
@@ -54,17 +47,11 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  /////////////////////////////////////
-  //    BINANCE CREDENTIALS TYPES    //
-  /////////////////////////////////////
   public type BinanceCredentials = {
     apiKey : Text;
     apiSecret : Text;
   };
 
-  /////////////////////////////////////
-  //            TYPES                //
-  /////////////////////////////////////
   type CryptoAsset = {
     symbol : Text;
     name : Text;
@@ -286,9 +273,6 @@ actor {
     minThreshold : (Text, Float);
   };
 
-  ////////////////////////
-  //   PERFORMANCE PREDICTIVA TYPES
-  ////////////////////////
   type PredictionOutcome = {
     predictedValue : Float;
     actualValue : Float;
@@ -349,9 +333,22 @@ actor {
     predictionOutcomes : [PredictionOutcome];
   };
 
-  /////////////////////////////////////
-  //           DATA                  //
-  /////////////////////////////////////
+  type BubbleAsset = {
+    symbol : Text;
+    name : Text;
+    price : Float;
+    flowIntensity : Float;
+    confluenceIntensity : Float;
+    trend : Text;
+    confidenceLevel : Float;
+  };
+
+  type BubbleAssetsResult = {
+    bubbleAssets : [BubbleAsset];
+    count : Nat;
+    lastUpdated : Time.Time;
+  };
+
   let flowData = Map.empty<Text, CapitalFlow>();
   let predictiveData = Map.empty<Text, PredictiveProjection>();
   let recoveryData = Map.empty<Text, RecoveryAsset>();
@@ -359,12 +356,12 @@ actor {
   let binanceSymbols = Map.empty<Text, BinanceSymbol>();
   let priceCache = Map.empty<Text, PriceTicker>();
   let setData = Set.empty<Text>();
+
   var directionStats = Map.empty<Text, FlowDirection>();
   var summaryStats = Map.empty<Text, FlowSummary>();
 
   let performanceState = Map.empty<Text, ((Map.Map<Text, ModelPerformance>, Map.Map<Text, PredictiveProjection>, [PredictionOutcome], Map.Map<Text, Time.Time>))>();
 
-  // Global Flow Radar Data
   var regions = Map.empty<Nat, Region>();
   var regionalFlows = Map.empty<Nat, RegionalFlow>();
   var institutionalAlerts = Map.empty<Nat, InstitutionalAlert>();
@@ -373,7 +370,6 @@ actor {
   var lastRegionalIntensities = Map.empty<Nat, Float>();
   var alertConfigs = Map.empty<Nat, AlertConfig>();
 
-  // Explicit Regional Configurations
   let regionConfigs = Map.fromIter<Nat, RegionalFlowConfig>([
     (
       1,
@@ -443,7 +439,6 @@ actor {
     ),
   ].values());
 
-  // Pre-populate region coordinates
   let regionCoordinates = Map.fromIter<Nat, (Float, Float)>(
     [
       (1, (37.6, -95.665)), // North America
@@ -455,14 +450,8 @@ actor {
     ].values()
   );
 
-  ///////////////////////////////////////////////
-  // Binance User Credentials Storage          //
-  ///////////////////////////////////////////////
   let userBinanceCredentials = Map.empty<Principal, BinanceCredentials>();
 
-  ///////////////////////////////////////////
-  // Performance Predicitiva State Init    //
-  ///////////////////////////////////////////
   func getPerformanceState(symbol : Text) : (Map.Map<Text, ModelPerformance>, Map.Map<Text, PredictiveProjection>, [PredictionOutcome], Map.Map<Text, Time.Time>){
     switch (performanceState.get(symbol)) {
       case (?x) { x };
@@ -476,9 +465,6 @@ actor {
     performanceState.add(symbol, state);
   };
 
-  ///////////////////////////////////////////
-  //        BINANCE CREDENTIALS MGMT       //
-  ///////////////////////////////////////////
   public shared ({ caller }) func addOrUpdateBinanceCredentials(apiKey : Text, apiSecret : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can set Binance credentials");
@@ -513,9 +499,6 @@ actor {
     };
   };
 
-  ////////////////////////////////////////
-  //     BINANCE API OUTCALL TEST       //
-  ////////////////////////////////////////
   public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
     OutCall.transform(input);
   };
@@ -541,9 +524,6 @@ actor {
     };
   };
 
-  // ===============================
-  //        BINANCE FUTURES
-  // ===============================
   public type BinanceFuturesMarket = {
     #usdt_m;
     #coin_m;
@@ -586,7 +566,6 @@ actor {
     ];
     let _jsonResponse = await OutCall.httpGetRequest(url, extraHeaders, transform);
 
-    // Temporary data for testing until fetch response is processed.
     let exampleData = [
       {
         symbol = "BTCUSD_PERP";
@@ -625,10 +604,6 @@ actor {
     exampleData;
   };
 
-  ////////////////////////////
-  //   QUERY FUNCTIONS      //
-  ////////////////////////////
-  // PUBLIC MARKET DATA - No authentication required (guests can access)
   public query func getCachedSymbols() : async [Text] {
     binanceSymbols.keys().toArray();
   };
@@ -637,9 +612,6 @@ actor {
     priceCache.values().toArray();
   };
 
-  ///////////////////////////////
-  //   CAPITAL FLOW MGMT       //
-  ///////////////////////////////
   public shared ({ caller }) func addCapitalFlow(symbol : Text, from : CryptoAsset, to : CryptoAsset, amount : Float, intensity : Float, pnlRatio : Float, marketImpact : Float) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add capital flow data");
@@ -746,7 +718,6 @@ actor {
     recoveryData.add(symbol, asset);
   };
 
-  // PUBLIC DATA - No authentication required (guests can access)
   public query func getCapitalFlow(symbol : Text) : async CapitalFlow {
     switch (flowData.get(symbol)) {
       case (null) {
@@ -787,9 +758,6 @@ actor {
     flowData.values().toArray();
   };
 
-  ////////////////////////////
-  //   DIRECTION MGMT       //
-  ////////////////////////////
   public shared ({ caller }) func updateDirection(symbol : Text, direction : Text, intensity : Float) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update direction data");
@@ -870,8 +838,11 @@ actor {
     summaryStats.add(symbol, { summary; timestamp = Time.now() });
   };
 
-  // PUBLIC DATA - No authentication required (guests can access)
-  public query func getInterpretation(symbol : Text) : async { direction : Text; intensity : Float; summary : Text } {
+  public query func getInterpretation(symbol : Text) : async {
+    direction : Text;
+    intensity : Float;
+    summary : Text;
+  } {
     let direction = switch (directionStats.get(symbol)) {
       case (null) { { direction = "none"; intensity = 0.0; lastUpdated = Time.now() } };
       case (?dir) { { direction = dir.direction; intensity = dir.intensity; lastUpdated = dir.lastUpdated } };
@@ -908,9 +879,6 @@ actor {
     };
   };
 
-  /////////////////////////////////////
-  //            REGION MGMT          //
-  /////////////////////////////////////
   public shared ({ caller }) func addRegion(regionId : Nat, name : Text, coordinates : (Float, Float)) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add regions");
@@ -929,7 +897,6 @@ actor {
     regions.add(regionId, newRegion);
   };
 
-  // PUBLIC DATA - No authentication required (guests can access)
   public query func getRegionCoordinates() : async [(Nat, (Float, Float))] {
     regionCoordinates.toArray();
   };
@@ -949,9 +916,6 @@ actor {
     };
   };
 
-  /////////////////////////////////////
-  //         ALERT MANAGEMENT        //
-  /////////////////////////////////////
   public shared ({ caller }) func addInstitutionalAlert(alertId : Nat, regionId : Nat, type_ : Text, volumeChange : Float, intensityChange : Float) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add institutional alerts");
@@ -967,7 +931,6 @@ actor {
     institutionalAlerts.add(alertId, alert);
   };
 
-  // PUBLIC DATA - No authentication required (guests can access)
   public query func getAlertConfig(regionId : Nat) : async AlertConfig {
     switch (alertConfigs.get(regionId)) {
       case (?config) { config };
@@ -1070,9 +1033,6 @@ actor {
     };
   };
 
-  // ########################//
-  //## PERFORMANCE PREDICTIVA
-  // #######################//
   public shared ({ caller }) func addPredictionOutcome(symbol : Text, predictedValue : Float, actualValue : Float, confidence : Float, outcome : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add prediction outcomes");
@@ -1125,7 +1085,6 @@ actor {
     };
   };
 
-  // PUBLIC DATA - No authentication required (guests can access)
   public query func getPredictionOutcomes(symbol : Text) : async [PredictionOutcome] {
     let (_, _, outcomes, _) = getPerformanceState(symbol);
     outcomes;
@@ -1226,9 +1185,87 @@ actor {
     let (modelPerformance, _, _, _) = getPerformanceState(symbol);
     modelPerformance.size();
   };
-  /////////////////////
-  // POSITIVITY && ////
-  /////////////////////
+
+  public query ({ caller }) func getBubbleAssets() : async BubbleAssetsResult {
+    let flows = flowData.values().toArray();
+    let projections = predictiveData.values().toArray();
+    let confluenceZones = confluenceData.values().toArray();
+
+    let assetsMap = Map.empty<Text, (Float, Float, Text, Float)>();
+
+    for (flow in flows.values()) {
+      switch (assetsMap.get(flow.toAsset.symbol)) {
+        case (null) {
+          assetsMap.add(flow.toAsset.symbol, (flow.flowIntensity, 0.0, "neutral", 0.0));
+        };
+        case (?existing) {
+          let updatedIntensities = if (existing.0 + flow.flowIntensity > 100.0) {
+            100.0;
+          } else {
+            existing.0 + flow.flowIntensity;
+          };
+          assetsMap.add(flow.toAsset.symbol, (updatedIntensities, existing.1, existing.2, existing.3));
+        };
+      };
+    };
+
+    for (projection in projections.values()) {
+      switch (assetsMap.get(projection.asset.symbol)) {
+        case (null) {
+          assetsMap.add(projection.asset.symbol, (0.0, 0.0, projection.trend, projection.confidenceLevel));
+        };
+        case (?existing) {
+          assetsMap.add(projection.asset.symbol, (existing.0, existing.1, projection.trend, projection.confidenceLevel));
+        };
+      };
+    };
+
+    for (zone in confluenceZones.values()) {
+      let firstIndicator : ?Text = if (zone.indicators.size() > 0) { ?zone.indicators[0] } else { null };
+      switch (firstIndicator) {
+        case (?first) {
+          switch (assetsMap.get(first)) {
+            case (null) {
+              assetsMap.add(first, (0.0, zone.intensity, "neutral", 0.0));
+            };
+            case (?existing) {
+              let updatedIntensities = if (existing.1 + zone.intensity > 100.0) {
+                100.0;
+              } else {
+                existing.1 + zone.intensity;
+              };
+              assetsMap.add(first, (existing.0, updatedIntensities, existing.2, existing.3));
+            };
+          };
+        };
+        case (null) {};
+      };
+    };
+
+    let filteredAssets = assetsMap.toArray().filter(
+      func((symbol, asset)) {
+        let totalIntensity = asset.0 + asset.1 + asset.3;
+        totalIntensity >= 20.0 and totalIntensity <= 100.0;
+      }
+    );
+
+    let bubbleAssets = filteredAssets.map(
+      func((symbol, asset)) {
+        let price = if (asset.0 > 0.0) { asset.0 + asset.1 } else { 1.0 };
+        {
+          symbol;
+          name = symbol;
+          price;
+          flowIntensity = asset.0;
+          confluenceIntensity = asset.1;
+          trend = asset.2;
+          confidenceLevel = asset.3;
+        };
+      }
+    );
+
+    { bubbleAssets; count = bubbleAssets.size(); lastUpdated = Time.now() };
+  };
 
   func formatTwoDecimals(value : Float) : Float {
     let temp = value * 100.0;

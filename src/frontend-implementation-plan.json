@@ -1,82 +1,64 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Stabilize Order Flow Monitor by hardening parsing, adding error fallbacks, and clarifying public Binance REST usage",
+  "title": "Fix confluence filtering to display assets in bubble visualization",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Add defensive parsing/guards and an in-panel error fallback (with retry) so OrderFlowMonitor never renders as a black screen on malformed localStorage or missing/empty Binance REST data.",
+      "summary": "Fix confluence filtering logic in useBubbleAssets hook to ensure assets with convergence data are properly displayed",
       "acceptanceCriteria": [
-        "If Binance endpoints fail or return unexpected shapes (e.g., bookTicker is null, recentTrades is empty), the OrderFlowMonitor still renders and shows an in-panel error/empty-state message (no blank/black content area).",
-        "If localStorage contains invalid JSON for orderFlowThresholds/confluenceThresholds/alertThresholds, the component falls back to defaults without throwing.",
-        "A thrown runtime error inside OrderFlowMonitor no longer results in a blank page; a fallback UI is displayed with a retry action (e.g., refresh/refetch)."
+        "Bubble visualization displays assets from Binance market data",
+        "No 'Nenhum ativo com alta confluência encontrada' error message when valid assets exist",
+        "Assets with any convergence score are visible in the 3D bubble view",
+        "Confluence filtering threshold is properly configured or adjusted to show available assets"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/safeJson.ts",
-          "operation": "create",
-          "description": "Add small helpers to safely parse JSON (try/catch) and validate/merge objects with defaults for localStorage-backed settings (orderFlowThresholds, confluenceThresholds, alertThresholds)."
-        },
-        {
-          "path": "frontend/src/components/OrderFlowErrorBoundary.tsx",
-          "operation": "create",
-          "description": "Create a React error boundary wrapper for OrderFlowMonitor that renders a user-visible fallback UI (within the tab content area) and provides a retry action to reset the boundary and trigger a refetch. Use existing shadcn-ui components already available in the project; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/OrderFlowMonitor.tsx",
+          "path": "frontend/src/hooks/useBubbleAssets.ts",
           "operation": "modify",
-          "description": "Harden OrderFlowMonitor against runtime crashes: replace direct JSON.parse(localStorage) with safe parsing + defaults, guard analysis computations when recentTrades is empty or bookTicker is null/invalid, and render an explicit empty-state panel (with retry/refetch) when analysis cannot be computed. Use existing shadcn-ui components already imported in this file; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/lib/binanceOrderFlowRest.ts",
-          "operation": "modify",
-          "description": "Make REST fetchers return safe defaults for unexpected/empty payloads (e.g., ensure recentTrades is always an array; ensure bookTicker is either a valid object or null; treat empty arrays as null) so downstream render/analysis never throws."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wrap the OrderFlowMonitor render path(s) with the new OrderFlowErrorBoundary (both multi-module mode and the single-tab FuturesMonitorTabSurface path if needed via composition) so any runtime render errors show a fallback UI instead of a blank page."
-        },
-        {
-          "path": "frontend/src/surfaces/FuturesMonitorTabSurface.tsx",
-          "operation": "modify",
-          "description": "Ensure the standalone Order Flow Monitor surface also uses the OrderFlowErrorBoundary wrapper so errors are contained to an in-page fallback with a retry action. Use existing shadcn-ui components if needed; verify the component's usage instructions before implementing."
+          "description": "Review and fix the confluence filtering logic that determines which assets are displayed in the bubble visualization. Investigate the current filtering threshold and convergence score calculations to identify why valid assets are being filtered out. Adjust the filtering criteria to ensure assets with any meaningful convergence data (from confluenceIntensity, flowIntensity, or confidenceLevel fields) are included in the returned array. If a minimum threshold is required, set it to a reasonable low value (e.g., > 0) rather than an arbitrary high value that excludes all assets. Ensure the hook properly merges backend bubble asset data with live Binance market data and that the filtering happens after enrichment with live prices."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Align frontend Binance usage to a consistent public-domain strategy and ensure order-flow fetching never uses/stores/sends Binance API keys for public market data calls.",
+      "summary": "Review and adjust convergence calculation logic to ensure proper evaluation of assets based on Binance data",
       "acceptanceCriteria": [
-        "Frontend order-flow data fetching continues to use only public Binance endpoints and does not read/send stored Binance credentials for those calls.",
-        "Backend private Binance calls use a consistent Binance domain strategy (no unexplained mismatch like api1.binance.com vs api.binance.com without fallback/justification in code comments).",
-        "Any place where API keys are used is centralized and documented in code comments (what endpoint requires it, and what headers/signature are applied)."
+        "Convergence scores are calculated from real Binance market data",
+        "Assets with significant price movement or volume are assigned appropriate convergence values",
+        "Filtering logic allows assets to pass through when they meet reasonable convergence thresholds"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/lib/binanceDomains.ts",
-          "operation": "create",
-          "description": "Centralize Binance base-domain constants for FRONTEND public market data only (spot REST, futures REST, futures WS) and add clear code comments distinguishing public (no key) usage. Keep this file explicitly free of any API-key logic."
+          "path": "frontend/src/hooks/useBubbleAssets.ts",
+          "operation": "modify",
+          "description": "Examine how convergence/confluence metrics are derived from the enriched asset data. Verify that confluenceIntensity, flowIntensity, and confidenceLevel values are being properly calculated or passed through from the backend BubbleAsset type. If these values are consistently zero or undefined, investigate whether the backend is returning valid data or if the enrichment process with live Binance data (price changes, volume) needs to contribute to these metrics. Ensure that assets with significant 24h price changes or volume from Binance WebSocket/REST data are assigned non-zero convergence values if backend data is missing or incomplete."
         },
         {
-          "path": "frontend/src/lib/binanceOrderFlowRest.ts",
+          "path": "frontend/src/lib/bubbleVisualMapping.ts",
           "operation": "modify",
-          "description": "Refactor to use shared public-domain constants (from binanceDomains.ts), add comments clarifying these are public/no-key calls, and ensure no request code reads from localStorage or interacts with the backend/credentials."
+          "description": "Review the bubble visual mapping logic that converts convergence metrics to bubble sizes and colors. Verify that the mapping functions handle edge cases where convergence values might be low but non-zero, and that the visual representation scales appropriately across the full range of possible values. Ensure that bubbles with minimal but valid convergence data are still rendered with visible sizes and colors rather than being effectively invisible."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Ensure BubbleVisualization component properly renders bubbles with appropriate error handling",
+      "acceptanceCriteria": [
+        "Empty state message only appears when genuinely no data is available from Binance",
+        "Bubbles render correctly when useBubbleAssets returns valid asset array",
+        "Error states distinguish between API failures and filtering logic issues"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/BubbleVisualization.tsx",
+          "operation": "modify",
+          "description": "Review the empty state logic that displays 'Nenhum ativo com alta confluência encontrada'. Verify the condition that triggers this message - it should only appear when the asset array from useBubbleAssets is genuinely empty due to no data from Binance, not when filtering has incorrectly excluded valid assets. Add conditional logic to distinguish between: (1) no backend/Binance data available (legitimate empty state), (2) data exists but all filtered out (filtering issue - add a different message or lower the threshold), and (3) loading states. Consider adding a debug log or development-mode indicator showing how many assets were fetched before and after filtering to help diagnose the issue."
         },
         {
-          "path": "frontend/src/lib/binanceService.ts",
+          "path": "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
           "operation": "modify",
-          "description": "Refactor WebSocket + REST fallback base URLs to use the shared public-domain constants (from binanceDomains.ts) and add comments clarifying no API keys are ever sent from the frontend for market data."
-        },
-        {
-          "path": "frontend/src/hooks/useBinanceOrderFlow.ts",
-          "operation": "modify",
-          "description": "Add a brief in-code contract comment that this hook performs only public market data fetching and must never depend on Binance credentials. Ensure error messages remain user-safe and do not suggest adding API keys for order-flow data."
-        },
-        {
-          "path": "frontend/src/components/BinanceCredentialsPanel.tsx",
-          "operation": "modify",
-          "description": "Update copy/comments to clearly communicate that Binance credentials are for private account features (e.g., futures positions) and are not required for public Order Flow Monitor market data. Use existing shadcn-ui components already present in this file; verify the component's usage instructions before implementing."
+          "description": "Enhance error handling and status messaging in the tab surface to provide clearer feedback about data availability versus filtering issues. If useBubbleAssets returns an empty array but Binance data is available, display a helpful message indicating that filtering might be too strict. Add a live status indicator showing both Binance connection status and the count of assets available before/after filtering to help users understand why bubbles might not be appearing."
         }
       ]
     }

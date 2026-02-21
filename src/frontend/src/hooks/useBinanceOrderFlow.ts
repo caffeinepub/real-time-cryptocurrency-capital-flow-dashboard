@@ -16,6 +16,11 @@ import {
   RecentTrade,
   BookTicker,
 } from '../lib/binanceOrderFlowRest';
+import {
+  generateOrderFlowFingerprint,
+  fingerprintsEqual,
+  OrderFlowFingerprint,
+} from '../lib/orderFlowFingerprint';
 
 export interface OrderFlowData {
   ticker: Ticker24h | null;
@@ -47,10 +52,14 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
+  // Use refs to track state without causing re-renders
   const abortControllerRef = useRef<AbortController | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFingerprintRef = useRef<OrderFlowFingerprint | null>(null);
+  const isInitialLoadRef = useRef(true);
+  const isManualRefetchRef = useRef(false);
 
-  const fetchData = async () => {
+  const fetchData = async (isManualRefetch: boolean = false) => {
     if (!enabled) return;
 
     // Cancel previous request
@@ -61,8 +70,15 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
-    setIsLoading(true);
-    setError(null);
+    // Only show loading for initial load or manual refetch
+    if (isInitialLoadRef.current || isManualRefetch) {
+      setIsLoading(true);
+    }
+
+    // Clear error only on manual refetch or initial load
+    if (isInitialLoadRef.current || isManualRefetch) {
+      setError(null);
+    }
 
     try {
       // Fetch all data in parallel
@@ -74,38 +90,71 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
 
       // Validate that we have at least some data
       if (!ticker && trades.length === 0 && !book) {
-        throw new Error('Nenhum dado disponível da API Binance');
+        throw new Error('No data available from Binance API');
       }
 
-      setData({
+      const newData: OrderFlowData = {
         ticker,
         recentTrades: trades,
         bookTicker: book,
-      });
-      setLastUpdated(Date.now());
+      };
+
+      // Generate fingerprint
+      const newFingerprint = generateOrderFlowFingerprint(newData);
+
+      // Only update state if data has meaningfully changed
+      if (!fingerprintsEqual(lastFingerprintRef.current, newFingerprint)) {
+        setData(newData);
+        setLastUpdated(Date.now());
+        lastFingerprintRef.current = newFingerprint;
+      }
+
+      // Clear error on successful fetch
       setError(null);
+      isInitialLoadRef.current = false;
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         console.error('Error fetching order flow data:', err);
-        setError(err.message || 'Erro ao buscar dados de fluxo de ordens');
+        // Only set error on initial load or manual refetch
+        if (isInitialLoadRef.current || isManualRefetch) {
+          setError(err.message || 'Error fetching order flow data');
+        }
       }
     } finally {
-      setIsLoading(false);
+      // Only clear loading for initial load or manual refetch
+      if (isInitialLoadRef.current || isManualRefetch) {
+        setIsLoading(false);
+      }
     }
+  };
+
+  // Manual refetch function
+  const refetch = () => {
+    isManualRefetchRef.current = true;
+    fetchData(true);
+    isManualRefetchRef.current = false;
   };
 
   // Initial fetch and polling
   useEffect(() => {
     if (!enabled) {
-      setData(null);
-      setError(null);
+      // When disabled, stop polling but keep existing data
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
       return;
     }
 
-    fetchData();
+    // Reset initial load flag when re-enabling
+    if (!data) {
+      isInitialLoadRef.current = true;
+    }
+
+    fetchData(false);
 
     if (pollingInterval > 0) {
-      intervalRef.current = setInterval(fetchData, pollingInterval);
+      intervalRef.current = setInterval(() => fetchData(false), pollingInterval);
     }
 
     return () => {
@@ -114,6 +163,7 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
       }
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
   }, [market, pollingInterval, enabled]);
@@ -123,6 +173,6 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
     isLoading,
     error,
     lastUpdated,
-    refetch: fetchData,
+    refetch,
   };
 }

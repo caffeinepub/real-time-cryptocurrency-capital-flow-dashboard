@@ -65,6 +65,20 @@ export const ModelPerformance = IDL.Record({
   'validationTime' : IDL.Float64,
   'accuracy' : IDL.Float64,
 });
+export const BubbleAsset = IDL.Record({
+  'trend' : IDL.Text,
+  'name' : IDL.Text,
+  'flowIntensity' : IDL.Float64,
+  'confluenceIntensity' : IDL.Float64,
+  'confidenceLevel' : IDL.Float64,
+  'price' : IDL.Float64,
+  'symbol' : IDL.Text,
+});
+export const BubbleAssetsResult = IDL.Record({
+  'count' : IDL.Nat,
+  'lastUpdated' : Time,
+  'bubbleAssets' : IDL.Vec(BubbleAsset),
+});
 export const PriceTicker = IDL.Record({
   'price' : IDL.Float64,
   'symbol' : IDL.Text,
@@ -308,6 +322,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(ModelPerformance)],
       ['query'],
     ),
+  'getBubbleAssets' : IDL.Func([], [BubbleAssetsResult], ['query']),
   'getCachedPrices' : IDL.Func([], [IDL.Vec(PriceTicker)], ['query']),
   'getCachedSymbols' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -474,6 +489,20 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : Time,
     'validationTime' : IDL.Float64,
     'accuracy' : IDL.Float64,
+  });
+  const BubbleAsset = IDL.Record({
+    'trend' : IDL.Text,
+    'name' : IDL.Text,
+    'flowIntensity' : IDL.Float64,
+    'confluenceIntensity' : IDL.Float64,
+    'confidenceLevel' : IDL.Float64,
+    'price' : IDL.Float64,
+    'symbol' : IDL.Text,
+  });
+  const BubbleAssetsResult = IDL.Record({
+    'count' : IDL.Nat,
+    'lastUpdated' : Time,
+    'bubbleAssets' : IDL.Vec(BubbleAsset),
   });
   const PriceTicker = IDL.Record({
     'price' : IDL.Float64,
@@ -715,6 +744,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ModelPerformance)],
         ['query'],
       ),
+    'getBubbleAssets' : IDL.Func([], [BubbleAssetsResult], ['query']),
     'getCachedPrices' : IDL.Func([], [IDL.Vec(PriceTicker)], ['query']),
     'getCachedSymbols' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),

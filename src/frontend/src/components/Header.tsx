@@ -1,8 +1,8 @@
-import { Activity, Layers, Wifi, WifiOff, BarChart3 } from 'lucide-react';
+import { Activity, Layers, Wifi, WifiOff, BarChart3, Sparkles } from 'lucide-react';
 import { useBinanceData } from '../hooks/useBinanceData';
 import LoginButton from './LoginButton';
 
-type ModuleType = 'flows' | 'confluence' | 'futures';
+type ModuleType = 'flows' | 'confluence' | 'futures' | 'bubbles';
 
 interface HeaderProps {
   activeModule: ModuleType;
@@ -45,9 +45,10 @@ export default function Header({ activeModule, setActiveModule }: HeaderProps) {
   const statusText = getStatusText();
 
   const navButtons = [
+    { id: 'bubbles' as ModuleType, label: 'Convergência', icon: Sparkles, color: 'neon-purple' },
     { id: 'flows' as ModuleType, label: 'Fluxo de Capital', icon: Activity, color: 'neon-cyan' },
-    { id: 'confluence' as ModuleType, label: 'Zonas de Confluência', icon: Layers, color: 'neon-green' },
-    { id: 'futures' as ModuleType, label: 'Monitor de Fluxo', icon: BarChart3, color: 'neon-yellow' },
+    { id: 'confluence' as ModuleType, label: 'Zonas Técnicas', icon: Layers, color: 'neon-green' },
+    { id: 'futures' as ModuleType, label: 'Order Flow', icon: BarChart3, color: 'neon-yellow' },
   ];
 
   return (

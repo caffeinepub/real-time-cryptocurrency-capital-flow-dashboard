@@ -1,15 +1,16 @@
+import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from 'next-themes';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import FlowVisualization from './components/FlowVisualization';
-import ConfluenceZones from './components/ConfluenceZones';
-import OrderFlowErrorBoundary from './components/OrderFlowErrorBoundary';
-import OrderFlowMonitor from './components/OrderFlowMonitor';
 import FuturesMonitorTabSurface from './surfaces/FuturesMonitorTabSurface';
-import { isUrlFlagEnabled } from './utils/urlParams';
-import { useState } from 'react';
+import CapitalFlowTabSurface from './surfaces/CapitalFlowTabSurface';
+import ConfluenceZonesTabSurface from './surfaces/ConfluenceZonesTabSurface';
+import BubbleVisualizationTabSurface from './surfaces/BubbleVisualizationTabSurface';
+import OrderFlowErrorBoundary from './components/OrderFlowErrorBoundary';
+import { getUrlParameter } from './utils/urlParams';
+import { usePWAUpdateToast } from './hooks/usePWAUpdateToast';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,20 +22,26 @@ const queryClient = new QueryClient({
   },
 });
 
-type Module = 'flows' | 'confluence' | 'futures';
+export type ModuleType = 'flows' | 'confluence' | 'futures' | 'bubbles';
 
 function App() {
-  const [activeModule, setActiveModule] = useState<Module>('flows');
+  usePWAUpdateToast();
 
-  // Check if running in standalone Order Flow Monitor mode
-  const isStandaloneOrderFlow = isUrlFlagEnabled('orderFlowTab');
+  const [activeModule, setActiveModule] = useState<ModuleType>('bubbles');
+  const [orderFlowResetKey, setOrderFlowResetKey] = useState(0);
+
+  const isStandaloneOrderFlow = getUrlParameter('orderflow') !== null;
+
+  const handleOrderFlowReset = () => {
+    setOrderFlowResetKey(prev => prev + 1);
+  };
 
   if (isStandaloneOrderFlow) {
     return (
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <OrderFlowErrorBoundary>
-            <FuturesMonitorTabSurface />
+          <OrderFlowErrorBoundary onReset={handleOrderFlowReset}>
+            <FuturesMonitorTabSurface key={orderFlowResetKey} />
           </OrderFlowErrorBoundary>
           <Toaster />
         </ThemeProvider>
@@ -47,31 +54,14 @@ function App() {
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <div className="min-h-screen bg-background text-foreground flex flex-col">
           <Header activeModule={activeModule} setActiveModule={setActiveModule} />
-
+          
           <main className="flex-1 container mx-auto px-4 py-8">
-            {activeModule === 'flows' && (
-              <div className="space-y-8">
-                <section>
-                  <FlowVisualization />
-                </section>
-
-                <section>
-                  <ConfluenceZones />
-                </section>
-              </div>
-            )}
-
-            {activeModule === 'confluence' && (
-              <div className="space-y-8">
-                <section>
-                  <ConfluenceZones />
-                </section>
-              </div>
-            )}
-
+            {activeModule === 'flows' && <CapitalFlowTabSurface />}
+            {activeModule === 'confluence' && <ConfluenceZonesTabSurface />}
+            {activeModule === 'bubbles' && <BubbleVisualizationTabSurface />}
             {activeModule === 'futures' && (
-              <OrderFlowErrorBoundary>
-                <OrderFlowMonitor />
+              <OrderFlowErrorBoundary onReset={handleOrderFlowReset}>
+                <FuturesMonitorTabSurface key={orderFlowResetKey} />
               </OrderFlowErrorBoundary>
             )}
           </main>

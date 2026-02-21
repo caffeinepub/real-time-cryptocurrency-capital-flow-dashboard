@@ -1,28 +1,38 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
+  "summary": "Financial market data visualization application with floating bubbles showing assets. Currently investigating why \"No assets with high confluence found\" message appears - need to analyze current data fetching logic and confluence filtering in the published version.",
   "architectural_notes": [
-    "Aplicativo utiliza múltiplas chaves de API; necessário padronizar onde são definidas/lidas (front e back-end) e como são selecionadas por ambiente/serviço."
+    "Application uses floating bubbles to visualize financial market assets",
+    "Confluence filtering system currently not showing any assets",
+    "Need to investigate current market data source and filtering logic"
   ],
   "known_issues": [
-    "Nova aba 'monitor de fluxo de ordens' fica preta ~1s após abrir, aparentemente quando o front-end tenta se comunicar com o back-end (possível problema na integração/uso de chaves de API)."
+    "\"Nenhum ativo com alta confluência encontrada\" message appearing - no assets passing confluence filter"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-prevent-the-order-flow-monitor-ui-from-crashing-black-screen-when-binance-rest-responses-are-missing-empty-or-when-saved-localstorage-settings-are-malformed-by-adding-defensive-parsing-guards-and-a-user-visible-error-fallback-instead-of-an-unhandled-react-render-error",
-      "title": "Prevent the \"Order Flow Monitor\" UI from crashing (black screen) when Binance REST responses are missing/empty or when saved localStorage settings are malformed, by adding defensive parsing/guards and a user-visible error fallback instead of an unhandled React render error.",
+      "id": "feature-investigate-and-fix-the-confluence-filtering-logic-in-usebubbleassets-hook-to-ensure-assets-with-convergence-data-are-properly-displayed-instead-of-showing-nenhum-ativo-com-alta-conflu-ncia-encontrada-message",
+      "title": "Investigate and fix the confluence filtering logic in useBubbleAssets hook to ensure assets with convergence data are properly displayed instead of showing 'Nenhum ativo com alta confluência encontrada' message",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-audit-and-align-frontend-vs-backend-binance-api-usage-so-the-app-does-not-mix-inconsistent-base-domains-endpoints-and-clearly-separates-public-no-key-vs-private-key-secret-calls-ensure-the-frontend-order-flow-tab-never-requires-binance-api-keys-to-fetch-public-market-data",
-      "title": "Audit and align frontend vs backend Binance API usage so the app does not mix inconsistent base domains/endpoints and clearly separates public (no key) vs private (key/secret) calls; ensure the frontend order-flow tab never requires Binance API keys to fetch public market data.",
+      "id": "feature-review-and-adjust-the-convergence-calculation-logic-in-usebubbleassets-to-ensure-it-properly-evaluates-assets-based-on-available-binance-data-price-changes-volume-market-metrics",
+      "title": "Review and adjust the convergence calculation logic in useBubbleAssets to ensure it properly evaluates assets based on available Binance data (price changes, volume, market metrics)",
       "reqIds": [
         "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-bubblevisualization-component-properly-renders-bubbles-when-asset-data-is-available-with-appropriate-error-handling-for-truly-empty-data-states-versus-filtering-issues",
+      "title": "Ensure BubbleVisualization component properly renders bubbles when asset data is available, with appropriate error handling for truly empty data states versus filtering issues",
+      "reqIds": [
+        "REQ-3"
       ],
       "version": 1
     }
@@ -30,20 +40,13 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Auditar integração de APIs no front-end e back-end (leitura/uso de múltiplas chaves de API) e corrigir inconsistências que causam falha na nova aba.",
+      "summary": "Fix asset confluence filtering logic to display assets in floating bubbles",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Fix backend Binance private API implementation inconsistencies: remove placeholder example positions and implement real fetching/parsing for open futures positions using the stored apiKey/apiSecret (including required signing if the endpoint requires it), returning normalized positions consistent with the frontend types.",
-      "reqIds": [
-        "REQ-3"
-      ],
       "status": "pending"
     }
   ],
-  "projectName": "Audit and fix API integration inconsistencies causing the Order Flow Monitor tab to go black",
+  "gameProjectType": "none",
+  "projectName": "Crypto Flow Bubbles",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

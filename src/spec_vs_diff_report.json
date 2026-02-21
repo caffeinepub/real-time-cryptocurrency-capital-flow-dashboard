@@ -1,67 +1,32 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T12:21:59.806Z",
-  "summary": "REQ-1 is largely addressed on the frontend via an OrderFlowErrorBoundary, safe localStorage JSON parsing/validation utilities, and defensive Binance REST response handling that returns null/[] instead of throwing. Frontend public Binance domain usage is centralized. However, backend Binance private-call consistency and real futures positions fetching (REQ-2 backend side + REQ-3) are not evidenced in the provided backend diff, and some added frontend changes appear outside the requested scope (standalone URL mode/surface, various PWA/localization-related edits per summaries).",
-  "missing_requirements": [
-    {
-      "id": "REQ-2",
-      "requirement": "Audit and align frontend vs backend Binance API usage so the app does not mix inconsistent base domains/endpoints and clearly separates public (no key) vs private (key/secret) calls; ensure the frontend order-flow tab never requires Binance API keys to fetch public market data.",
-      "reason": "Frontend public-domain centralization and comments are present, but the diff summary does not show backend Binance domain alignment, fallback/justification, or centralized/documented key usage for private endpoints. backend/main.mo content is truncated and contains no visible Binance endpoint/domain/signing implementation details.",
-      "evidence": [
-        "frontend/src/lib/binanceDomains.ts",
-        "backend/main.mo (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "requirement": "Fix backend Binance private API implementation inconsistencies: remove placeholder example positions and implement real fetching/parsing for open futures positions using the stored apiKey/apiSecret (including required signing if the endpoint requires it), returning normalized positions consistent with the frontend types.",
-      "reason": "The diff does not provide evidence that backend/main.mo's fetchPositions (or equivalent) was changed to remove hardcoded example positions or to implement signed Binance private endpoint calls with parsing and explicit error handling; the shown backend diff section is unrelated/truncated before any such logic.",
-      "evidence": [
-        "backend/main.mo (truncated)"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-21T16:18:26.905Z",
+  "summary": "The diff implements a comprehensive fix for the confluence filtering issue by creating synthetic bubble assets from live Binance market data when backend data is unavailable. All three requirements appear to be addressed through changes to useBubbleAssets.ts (convergence calculation), BubbleVisualization.tsx (rendering and error handling), and supporting files for visual mapping and surface display.",
+  "missing_requirements": [],
   "hallucinated_features": [
     {
-      "description": "Standalone Order Flow Monitor rendering mode toggled by URL flag (orderFlowTab) and a dedicated FuturesMonitorTabSurface shell.",
-      "reason": "BuildRequest focuses on preventing crashes and aligning API usage; it does not request a new standalone app mode, URL-flag routing behavior, or a new surface component/shell.",
+      "description": "Added extensive info/alert UI components in BubbleVisualizationTabSurface.tsx showing connection status, synthetic data warnings, and legend with trend colors",
+      "reason": "BuildRequest does not request any UI enhancements for status indicators, alerts, or legend displays. The requirements focus only on fixing the filtering logic, convergence calculation, and error handling - not adding new UI elements for data source transparency.",
       "evidence": [
-        "frontend/src/App.tsx",
-        "frontend/src/surfaces/FuturesMonitorTabSurface.tsx",
-        "frontend/src/utils/urlParams.ts"
+        "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx"
       ]
     },
     {
-      "description": "PWA/manifest/service-worker and related asset/cross-origin handling changes (as described in the repository summary file).",
-      "reason": "No requirement mentions PWA installability, manifest/icon/screenshot changes, or service worker precache/cross-origin updates.",
+      "description": "Created bubbleVisualMapping.ts with color interpolation utilities and visual mapping functions for convergence-to-size and trend-to-color",
+      "reason": "The BuildRequest explicitly states as a non-goal: 'Changing the visual design or layout of the bubble visualization'. While mapping convergence to size may be necessary for display, the color interpolation utility appears to be beyond the scope of fixing the filtering logic.",
       "evidence": [
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Broad Portuguese localization/formatting/theme changes across multiple modules (as described in the repository summary file).",
-      "reason": "Localization/theme/formatting changes are not part of the requested API-integration audit/fix scope.",
-      "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend/src/lib/bubbleVisualMapping.ts"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.85,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/BinanceCredentialsPanel.tsx",
-    "frontend/src/components/OrderFlowErrorBoundary.tsx",
-    "frontend/src/components/OrderFlowMonitor.tsx",
-    "frontend/src/hooks/useBinanceOrderFlow.ts",
-    "frontend/src/lib/binanceDomains.ts",
-    "frontend/src/lib/binanceOrderFlowRest.ts",
-    "frontend/src/lib/binanceService.ts",
-    "frontend/src/surfaces/FuturesMonitorTabSurface.tsx",
-    "frontend/src/utils/safeJson.ts",
-    "frontend/src/utils/urlParams.ts",
+    "frontend/src/components/BubbleVisualization.tsx",
+    "frontend/src/hooks/useBubbleAssets.ts",
+    "frontend/src/lib/bubbleVisualMapping.ts",
+    "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
     "project_state.json"
   ]
 }

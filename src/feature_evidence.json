@@ -2,15 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-prevent-the-order-flow-monitor-ui-from-crashing-black-screen-when-binance-rest-responses-are-missing-empty-or-when-saved-localstorage-settings-are-malformed-by-adding-defensive-parsing-guards-and-a-user-visible-error-fallback-instead-of-an-unhandled-react-render-error",
-      "featureTitle": "Prevent the \"Order Flow Monitor\" UI from crashing (black screen) when Binance REST responses are missing/empty or when saved localStorage settings are malformed, by adding defensive parsing/guards and a user-visible error fallback instead of an unhandled React render error.",
+      "featureId": "feature-investigate-and-fix-the-confluence-filtering-logic-in-usebubbleassets-hook-to-ensure-assets-with-convergence-data-are-properly-displayed-instead-of-showing-nenhum-ativo-com-alta-conflu-ncia-encontrada-message",
+      "featureTitle": "Investigate and fix the confluence filtering logic in useBubbleAssets hook to ensure assets with convergence data are properly displayed instead of showing 'Nenhum ativo com alta confluência encontrada' message",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/OrderFlowErrorBoundary.tsx",
-        "frontend/src/components/OrderFlowMonitor.tsx",
-        "frontend/src/lib/binanceOrderFlowRest.ts",
-        "frontend/src/surfaces/FuturesMonitorTabSurface.tsx",
-        "frontend/src/utils/safeJson.ts"
+        "frontend/src/hooks/useBubbleAssets.ts"
       ],
       "components": [
         "http-outcalls@3.0.0",
@@ -27,14 +22,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-audit-and-align-frontend-vs-backend-binance-api-usage-so-the-app-does-not-mix-inconsistent-base-domains-endpoints-and-clearly-separates-public-no-key-vs-private-key-secret-calls-ensure-the-frontend-order-flow-tab-never-requires-binance-api-keys-to-fetch-public-market-data",
-      "featureTitle": "Audit and align frontend vs backend Binance API usage so the app does not mix inconsistent base domains/endpoints and clearly separates public (no key) vs private (key/secret) calls; ensure the frontend order-flow tab never requires Binance API keys to fetch public market data.",
+      "featureId": "feature-review-and-adjust-the-convergence-calculation-logic-in-usebubbleassets-to-ensure-it-properly-evaluates-assets-based-on-available-binance-data-price-changes-volume-market-metrics",
+      "featureTitle": "Review and adjust the convergence calculation logic in useBubbleAssets to ensure it properly evaluates assets based on available Binance data (price changes, volume, market metrics)",
       "files": [
-        "frontend/src/components/BinanceCredentialsPanel.tsx",
-        "frontend/src/hooks/useBinanceOrderFlow.ts",
-        "frontend/src/lib/binanceDomains.ts",
-        "frontend/src/lib/binanceOrderFlowRest.ts",
-        "frontend/src/lib/binanceService.ts"
+        "frontend/src/hooks/useBubbleAssets.ts",
+        "frontend/src/lib/bubbleVisualMapping.ts"
       ],
       "components": [
         "http-outcalls@3.0.0",
@@ -47,6 +39,27 @@
       ],
       "testIds": [
         "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-bubblevisualization-component-properly-renders-bubbles-when-asset-data-is-available-with-appropriate-error-handling-for-truly-empty-data-states-versus-filtering-issues",
+      "featureTitle": "Ensure BubbleVisualization component properly renders bubbles when asset data is available, with appropriate error handling for truly empty data states versus filtering issues",
+      "files": [
+        "frontend/src/components/BubbleVisualization.tsx",
+        "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
       ],
       "confidence": "high"
     }

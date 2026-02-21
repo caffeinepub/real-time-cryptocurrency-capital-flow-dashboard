@@ -1,72 +1,82 @@
 {
   "kind": "build_request",
-  "title": "Audit and fix API integration inconsistencies causing the Order Flow Monitor tab to go black",
-  "priority": "normal",
+  "title": "Fix confluence filtering to display assets in bubble visualization",
+  "projectName": "Crypto Flow Bubbles",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Prevent the \"Order Flow Monitor\" UI from crashing (black screen) when Binance REST responses are missing/empty or when saved localStorage settings are malformed, by adding defensive parsing/guards and a user-visible error fallback instead of an unhandled React render error.",
+      "text": "Investigate and fix the confluence filtering logic in useBubbleAssets hook to ensure assets with convergence data are properly displayed instead of showing 'Nenhum ativo com alta confluência encontrada' message",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-1",
+          "msg-2",
+          "msg-3",
+          "msg-4",
+          "msg-5",
+          "msg-6",
+          "msg-7",
+          "msg-8",
+          "msg-9",
+          "msg-10"
         ],
         "quotes": [
-          "Reveja o codigo.. e busque por inconsistências..  no front e back end relacionados a api"
+          "Nao ha ativo com alta confluência encontrada...esta dizendo",
+          "Sim"
         ]
       },
       "acceptanceCriteria": [
-        "If Binance endpoints fail or return unexpected shapes (e.g., bookTicker is null, recentTrades is empty), the OrderFlowMonitor still renders and shows an in-panel error/empty-state message (no blank/black content area).",
-        "If localStorage contains invalid JSON for orderFlowThresholds/confluenceThresholds/alertThresholds, the component falls back to defaults without throwing.",
-        "A thrown runtime error inside OrderFlowMonitor no longer results in a blank page; a fallback UI is displayed with a retry action (e.g., refresh/refetch)."
+        "Bubble visualization displays assets from Binance market data",
+        "No 'Nenhum ativo com alta confluência encontrada' error message when valid assets exist",
+        "Assets with any convergence score are visible in the 3D bubble view",
+        "Confluence filtering threshold is properly configured or adjusted to show available assets"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Audit and align frontend vs backend Binance API usage so the app does not mix inconsistent base domains/endpoints and clearly separates public (no key) vs private (key/secret) calls; ensure the frontend order-flow tab never requires Binance API keys to fetch public market data.",
-      "target": "both",
+      "text": "Review and adjust the convergence calculation logic in useBubbleAssets to ensure it properly evaluates assets based on available Binance data (price changes, volume, market metrics)",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Reveja o codigo.. e busque por inconsistências..  no front e back end relacionados a api"
+          "msg-2",
+          "msg-3"
         ]
       },
       "acceptanceCriteria": [
-        "Frontend order-flow data fetching continues to use only public Binance endpoints and does not read/send stored Binance credentials for those calls.",
-        "Backend private Binance calls use a consistent Binance domain strategy (no unexplained mismatch like api1.binance.com vs api.binance.com without fallback/justification in code comments).",
-        "Any place where API keys are used is centralized and documented in code comments (what endpoint requires it, and what headers/signature are applied)."
+        "Convergence scores are calculated from real Binance market data",
+        "Assets with significant price movement or volume are assigned appropriate convergence values",
+        "Filtering logic allows assets to pass through when they meet reasonable convergence thresholds"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Fix backend Binance private API implementation inconsistencies: remove placeholder example positions and implement real fetching/parsing for open futures positions using the stored apiKey/apiSecret (including required signing if the endpoint requires it), returning normalized positions consistent with the frontend types.",
-      "target": "backend",
+      "text": "Ensure BubbleVisualization component properly renders bubbles when asset data is available, with appropriate error handling for truly empty data states versus filtering issues",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Reveja o codigo.. e busque por inconsistências..  no front e back end relacionados a api"
+          "msg-2",
+          "msg-10"
         ]
       },
       "acceptanceCriteria": [
-        "backend/main.mo no longer returns hardcoded example positions from fetchPositions; it returns parsed data from Binance when possible.",
-        "When credentials are missing, backend errors remain explicit and consistent (e.g., \"No Binance credentials found for user\").",
-        "When Binance rejects the request (e.g., auth/signature issues), the backend returns a clear error message that the frontend can surface (not silent success with fake data).",
-        "The frontend hook useOpenFuturesPositions continues to work with the backend response shape (NormalizedFuturesPosition[]) without runtime type errors."
+        "Empty state message only appears when genuinely no data is available from Binance",
+        "Bubbles render correctly when useBubbleAssets returns valid asset array",
+        "Error states distinguish between API failures and filtering logic issues"
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under frontend/src/components/ui or other paths listed in frontend.immutablePaths.",
-    "Keep all backend logic in the single actor in backend/main.mo; only add backend/migration.mo if state schema changes require it."
+    "Do not modify Internet Identity authentication logic in useInternetIdentity.ts",
+    "Do not change the Three.js 3D rendering implementation in FloatingBubble.tsx",
+    "Maintain compatibility with existing Binance WebSocket and REST API integration",
+    "Preserve the single-actor backend architecture - do not modify main.mo unless data structure changes are required"
   ],
   "nonGoals": [
-    "Adding third-party authentication providers (only Internet Identity is supported).",
-    "Adding external databases or non-IC backend services.",
-    "Implementing real-time WebSocket streaming between frontend and the IC canister (polling is acceptable)."
+    "Adding new data sources beyond Binance",
+    "Implementing additional confluence indicators not already in the codebase",
+    "Changing the visual design or layout of the bubble visualization",
+    "Adding user-configurable confluence threshold controls (unless necessary for the fix)"
   ],
   "imageRequirements": {
     "required": [],
