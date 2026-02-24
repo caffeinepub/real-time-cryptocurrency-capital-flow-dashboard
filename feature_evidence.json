@@ -1,0 +1,26 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-add-a-prominent-install-app-button-in-the-application-ui-e-g-in-the-header-component-alongside-existing-navigation-controls-that-triggers-the-pwa-installation-prompt-the-button-should-use-the-existing-pwautils-ts-install-prompt-utilities-and-the-pwainstallprompt-tsx-component-logic-the-button-must-1-only-be-visible-when-the-app-is-not-already-running-in-standalone-installed-mode-2-handle-ios-show-install-instructions-android-and-desktop-flows-appropriately-3-display-a-platform-appropriate-label-such-as-install-app-or-add-to-home-screen-and-4-be-styled-consistently-with-the-existing-neon-dark-theme",
+      "featureTitle": "Add a prominent 'Install App' button in the application UI (e.g., in the Header component alongside existing navigation controls) that triggers the PWA installation prompt. The button should use the existing `pwaUtils.ts` install prompt utilities and the `PWAInstallPrompt.tsx` component logic. The button must: (1) only be visible when the app is not already running in standalone/installed mode, (2) handle iOS (show install instructions), Android, and desktop flows appropriately, (3) display a platform-appropriate label such as 'Install App' or 'Add to Home Screen', and (4) be styled consistently with the existing neon dark theme.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/Header.tsx"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

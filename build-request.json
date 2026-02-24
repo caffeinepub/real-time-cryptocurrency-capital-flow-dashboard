@@ -1,0 +1,43 @@
+{
+  "kind": "build_request",
+  "title": "Add PWA Install Button to App Header/UI",
+  "projectName": "Crypto Confluence Bubbles",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Add a prominent 'Install App' button in the application UI (e.g., in the Header component alongside existing navigation controls) that triggers the PWA installation prompt. The button should use the existing `pwaUtils.ts` install prompt utilities and the `PWAInstallPrompt.tsx` component logic. The button must: (1) only be visible when the app is not already running in standalone/installed mode, (2) handle iOS (show install instructions), Android, and desktop flows appropriately, (3) display a platform-appropriate label such as 'Install App' or 'Add to Home Screen', and (4) be styled consistently with the existing neon dark theme.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "adicionar um botao no aplicativo para forçar a instalação como aplicativo pwa. Ainda nao estamos usando o aplicativo sem necessidade de browser."
+        ]
+      },
+      "acceptanceCriteria": [
+        "An 'Install App' button is visible in the app UI when the app is not already installed/running in standalone mode.",
+        "Clicking the button on Android/Desktop triggers the native browser install prompt (beforeinstallprompt).",
+        "On iOS, clicking the button shows instructions for adding to home screen (since iOS does not support programmatic install prompts).",
+        "The button is hidden when the app is already running in standalone (installed) mode.",
+        "The button styling matches the existing neon dark theme used throughout the app.",
+        "The button is accessible and visible without requiring the user to scroll or navigate."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify files listed in frontend.immutablePaths (useInternetIdentity.ts, useActor.ts, main.tsx, components/ui).",
+    "Reuse existing pwaUtils.ts and PWAInstallPrompt.tsx logic; do not duplicate installation detection or prompt management code."
+  ],
+  "nonGoals": [
+    "Do not modify backend logic or Motoko files.",
+    "Do not add push notification or background sync features.",
+    "Do not change the existing PWA manifest or service worker configuration.",
+    "Do not add a new full-page onboarding flow — only a button/inline prompt."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

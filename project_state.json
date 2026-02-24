@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-add-a-prominent-install-app-button-in-the-application-ui-e-g-in-the-header-component-alongside-existing-navigation-controls-that-triggers-the-pwa-installation-prompt-the-button-should-use-the-existing-pwautils-ts-install-prompt-utilities-and-the-pwainstallprompt-tsx-component-logic-the-button-must-1-only-be-visible-when-the-app-is-not-already-running-in-standalone-installed-mode-2-handle-ios-show-install-instructions-android-and-desktop-flows-appropriately-3-display-a-platform-appropriate-label-such-as-install-app-or-add-to-home-screen-and-4-be-styled-consistently-with-the-existing-neon-dark-theme",
+      "title": "Add a prominent 'Install App' button in the application UI (e.g., in the Header component alongside existing navigation controls) that triggers the PWA installation prompt. The button should use the existing `pwaUtils.ts` install prompt utilities and the `PWAInstallPrompt.tsx` component logic. The button must: (1) only be visible when the app is not already running in standalone/installed mode, (2) handle iOS (show install instructions), Android, and desktop flows appropriately, (3) display a platform-appropriate label such as 'Install App' or 'Add to Home Screen', and (4) be styled consistently with the existing neon dark theme.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Add a button in the app to prompt/force PWA installation so it can be used without a browser",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Crypto Confluence Bubbles",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

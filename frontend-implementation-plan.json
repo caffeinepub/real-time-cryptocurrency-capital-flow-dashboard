@@ -1,0 +1,41 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Add PWA Install Button to App Header/UI",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Add a prominent 'Install App' button in the Header component that triggers PWA installation prompts using existing pwaUtils and PWAInstallPrompt logic, with platform-specific handling for iOS, Android, and desktop",
+      "acceptanceCriteria": [
+        "An 'Install App' button is visible in the app UI when the app is not already installed/running in standalone mode.",
+        "Clicking the button on Android/Desktop triggers the native browser install prompt (beforeinstallprompt).",
+        "On iOS, clicking the button shows instructions for adding to home screen (since iOS does not support programmatic install prompts).",
+        "The button is hidden when the app is already running in standalone (installed) mode.",
+        "The button styling matches the existing neon dark theme used throughout the app.",
+        "The button is accessible and visible without requiring the user to scroll or navigate."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Import and integrate PWA install button functionality from pwaUtils.ts. Add a new install button element positioned prominently in the header (e.g., between the live status indicator and login button). Use pwaUtils.isStandalone() to conditionally render the button only when the app is not in standalone mode. Wire up onClick handler to call pwaUtils.promptInstall() which will handle platform detection and show appropriate install flow (native prompt for Android/Desktop, instructions modal for iOS). Apply neon theme styling consistent with existing header buttons. Verify pwaUtils usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/lib/pwaUtils.ts",
+          "operation": "modify",
+          "description": "Review and ensure the existing promptInstall() function handles all platform cases correctly: (1) iOS detection triggers instructions display, (2) Android/Desktop with captured beforeinstallprompt event triggers native prompt, (3) fallback messaging for unsupported scenarios. Ensure isStandalone() correctly detects when app is running as installed PWA. Add any missing platform detection logic if needed. Ensure the install prompt event listener is properly attached and stored for later use."
+        },
+        {
+          "path": "frontend/src/components/PWAInstallPrompt.tsx",
+          "operation": "modify",
+          "description": "Ensure the existing PWAInstallPrompt component (currently used for automatic prompts with cooldown) can be reused or its logic can be leveraged by the new Header install button. If needed, extract reusable iOS instruction modal or platform-specific messaging into a shared utility or component that both the automatic prompt and the Header button can use. Verify the component respects the user's dismissal preferences and doesn't conflict with the new Header button trigger."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure the beforeinstallprompt event listener setup (if present in App.tsx) correctly stores the event for later use by pwaUtils.promptInstall(). If the event capture logic is not yet in pwaUtils or App.tsx, add a global listener that captures the beforeinstallprompt event and stores it in a module-level variable accessible to pwaUtils. This ensures the Header install button can trigger the native install prompt when clicked."
+        }
+      ]
+    }
+  ]
+}
