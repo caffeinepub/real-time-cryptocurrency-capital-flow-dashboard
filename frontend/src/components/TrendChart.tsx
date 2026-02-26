@@ -1,121 +1,183 @@
-import { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import React, { useMemo } from 'react';
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { useTrendChartData } from '../hooks/useTrendChartData';
 import type { TrendChartDataPoint } from '../hooks/useTrendChartData';
 
 interface TrendChartProps {
-  data: TrendChartDataPoint[];
-  symbol: string;
+  /** Symbol to fetch data for (new API) */
+  symbol?: string;
+  /** Pre-fetched data (legacy API used by BubbleDetailPanel) */
+  data?: TrendChartDataPoint[];
+  height?: number;
+  showAxes?: boolean;
+  showTooltip?: boolean;
 }
 
-export default function TrendChart({ data, symbol }: TrendChartProps) {
-  // Calculate trend direction
-  const trend = useMemo(() => {
-    if (data.length < 2) return 'neutral';
-    const firstClose = data[0].close;
-    const lastClose = data[data.length - 1].close;
-    return lastClose > firstClose ? 'bullish' : lastClose < firstClose ? 'bearish' : 'neutral';
-  }, [data]);
+function ChartContent({
+  data,
+  height,
+  showAxes,
+  showTooltip,
+  symbol,
+}: {
+  data: TrendChartDataPoint[];
+  height: number;
+  showAxes: boolean;
+  showTooltip: boolean;
+  symbol: string;
+}) {
+  const prices = data.map((d) => d.close);
+  const firstPrice = prices[0] ?? 0;
+  const lastPrice = prices[prices.length - 1] ?? 0;
+  const isBullish = lastPrice >= firstPrice;
 
-  // Calculate price range for Y-axis domain
-  const priceRange = useMemo(() => {
-    if (data.length === 0) return { min: 0, max: 100 };
-    
-    const prices = data.flatMap(d => [d.low, d.high]);
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    const padding = (max - min) * 0.1; // 10% padding
-    
-    return {
-      min: Math.floor(min - padding),
-      max: Math.ceil(max + padding),
-    };
-  }, [data]);
-
-  // Determine colors based on trend
-  const lineColor = trend === 'bullish' ? 'hsl(142, 85%, 55%)' : trend === 'bearish' ? 'hsl(0, 85%, 60%)' : 'hsl(48, 90%, 58%)';
-  const gradientId = `gradient-${symbol}`;
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (!active || !payload || !payload.length) return null;
-
-    const data = payload[0].payload;
-    const isGreen = data.close >= data.open;
-
-    return (
-      <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-lg p-3 shadow-xl">
-        <p className="text-xs text-muted-foreground mb-2 font-medium">{data.date}</p>
-        <div className="space-y-1 text-xs">
-          <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Abertura:</span>
-            <span className="font-bold">${data.open.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Máxima:</span>
-            <span className="font-bold text-neon-green">${data.high.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Mínima:</span>
-            <span className="font-bold text-neon-pink">${data.low.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Fechamento:</span>
-            <span className={`font-bold ${isGreen ? 'text-neon-green' : 'text-neon-pink'}`}>
-              ${data.close.toFixed(2)}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const strokeColor = isBullish ? '#00e676' : '#ff1744';
+  const gradientId = `grad-${symbol}-${height}`;
 
   return (
-    <div className="w-full h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={lineColor} stopOpacity={0.3} />
-              <stop offset="95%" stopColor={lineColor} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke="hsl(var(--border))" 
-            opacity={0.2}
-            vertical={false}
+    <ResponsiveContainer width="100%" height={height}>
+      <AreaChart data={data} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={strokeColor} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        {showAxes && (
+          <>
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 9, fill: '#666' }}
+              tickLine={false}
+              axisLine={false}
+              interval="preserveStartEnd"
+            />
+            <YAxis
+              domain={['auto', 'auto']}
+              tick={{ fontSize: 9, fill: '#666' }}
+              tickLine={false}
+              axisLine={false}
+              width={45}
+              tickFormatter={(v: number) =>
+                v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(2)
+              }
+            />
+          </>
+        )}
+        {showTooltip && (
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#0d1117',
+              border: '1px solid #1e2530',
+              borderRadius: '8px',
+              fontSize: '11px',
+              color: '#e2e8f0',
+            }}
+            formatter={(value: number) => [
+              `$${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+              'Preço',
+            ]}
+            labelFormatter={(label) => String(label)}
           />
-          <XAxis 
-            dataKey="date" 
-            stroke="hsl(var(--muted-foreground))"
-            fontSize={10}
-            tickLine={false}
-            axisLine={false}
-            interval="preserveStartEnd"
-            minTickGap={30}
-          />
-          <YAxis 
-            domain={[priceRange.min, priceRange.max]}
-            stroke="hsl(var(--muted-foreground))"
-            fontSize={10}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(value) => `$${value.toFixed(0)}`}
-            width={50}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="close"
-            stroke={lineColor}
-            strokeWidth={2}
-            fill={`url(#${gradientId})`}
-            dot={false}
-            activeDot={{ r: 4, fill: lineColor, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+        )}
+        <Area
+          type="monotone"
+          dataKey="close"
+          stroke={strokeColor}
+          strokeWidth={1.5}
+          fill={`url(#${gradientId})`}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+/** Wrapper that fetches data by symbol */
+function TrendChartBySymbol({
+  symbol,
+  height,
+  showAxes,
+  showTooltip,
+}: {
+  symbol: string;
+  height: number;
+  showAxes: boolean;
+  showTooltip: boolean;
+}) {
+  const { data, isLoading, isError } = useTrendChartData(symbol);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center" style={{ height }}>
+        <div className="w-4 h-4 border border-neon-green border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError || !data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center" style={{ height }}>
+        <span className="text-[10px] text-muted-foreground">—</span>
+      </div>
+    );
+  }
+
+  return (
+    <ChartContent
+      data={data}
+      height={height}
+      showAxes={showAxes}
+      showTooltip={showTooltip}
+      symbol={symbol}
+    />
+  );
+}
+
+export default function TrendChart({
+  symbol,
+  data,
+  height = 120,
+  showAxes = true,
+  showTooltip = true,
+}: TrendChartProps) {
+  // Legacy path: data was passed directly (BubbleDetailPanel)
+  if (data && data.length > 0) {
+    const sym = symbol ?? 'chart';
+    return (
+      <ChartContent
+        data={data}
+        height={height}
+        showAxes={showAxes}
+        showTooltip={showTooltip}
+        symbol={sym}
+      />
+    );
+  }
+
+  // New path: fetch by symbol
+  if (symbol) {
+    return (
+      <TrendChartBySymbol
+        symbol={symbol}
+        height={height}
+        showAxes={showAxes}
+        showTooltip={showTooltip}
+      />
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center" style={{ height }}>
+      <span className="text-[10px] text-muted-foreground">—</span>
     </div>
   );
 }

@@ -1,13 +1,105 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { 
-  BinanceWebSocketClient, 
-  BinanceTickerData, 
-  BinanceConnectionStatus,
+import { useState, useEffect, useCallback } from 'react';
+import {
+  BinanceWebSocketClient,
+  TickerData,
+  ConnectionStatus,
   WHITELISTED_SYMBOLS,
-  fetchBinancePrices 
+  fetchTickerREST,
 } from '../lib/binanceService';
-import { roundToTwoDecimals } from '../lib/formatters';
 
+// Module-level cache so data persists across remounts
+const tickerCache: Record<string, TickerData> = {};
+let globalStatus: ConnectionStatus = 'loading';
+const statusListeners: Set<(s: ConnectionStatus) => void> = new Set();
+const tickerListeners: Set<(t: Record<string, TickerData>) => void> = new Set();
+
+function notifyStatus(s: ConnectionStatus) {
+  globalStatus = s;
+  statusListeners.forEach((fn) => fn(s));
+}
+
+function notifyTickers(t: Record<string, TickerData>) {
+  tickerListeners.forEach((fn) => fn({ ...t }));
+}
+
+let wsClient: BinanceWebSocketClient | null = null;
+let pollInterval: ReturnType<typeof setInterval> | null = null;
+let initialized = false;
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+async function startPolling() {
+  if (pollInterval) return;
+  notifyStatus('polling');
+  const poll = async () => {
+    try {
+      const results = await Promise.allSettled(
+        WHITELISTED_SYMBOLS.map((sym) => fetchTickerREST(sym))
+      );
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled' && r.value) {
+          const sym = WHITELISTED_SYMBOLS[i];
+          tickerCache[sym] = {
+            ...r.value,
+            lastPrice: round2(r.value.lastPrice),
+            priceChangePercent: round2(r.value.priceChangePercent),
+          };
+        }
+      });
+      notifyTickers(tickerCache);
+    } catch {
+      // silent
+    }
+  };
+  await poll();
+  pollInterval = setInterval(poll, 15_000);
+}
+
+function stopPolling() {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
+}
+
+function initGlobalConnection() {
+  if (initialized) return;
+  initialized = true;
+
+  try {
+    wsClient = new BinanceWebSocketClient(WHITELISTED_SYMBOLS);
+
+    wsClient.onStatusChange((status) => {
+      notifyStatus(status);
+      if (status === 'disconnected') {
+        stopPolling();
+        startPolling();
+      } else if (status === 'connected') {
+        stopPolling();
+      }
+    });
+
+    wsClient.onTicker((sym, data) => {
+      tickerCache[sym] = {
+        ...data,
+        lastPrice: round2(data.lastPrice),
+        priceChangePercent: round2(data.priceChangePercent),
+      };
+      notifyTickers(tickerCache);
+    });
+
+    wsClient.connect();
+  } catch {
+    startPolling();
+  }
+}
+
+// ─── Compatibility helpers ────────────────────────────────────────────────────
+// Convert the tickers map to the legacy LiveMarketData array shape so that
+// existing consumers (useQueries, useBubbleAssets, etc.) keep working without
+// changes to their destructuring.
 export interface LiveMarketData {
   symbol: string;
   price: number;
@@ -18,139 +110,94 @@ export interface LiveMarketData {
   lastUpdate: number;
 }
 
-// Module-level cache for stable data across remounts
-let cachedMarketData: Map<string, LiveMarketData> = new Map();
-let lastCacheUpdate: number = 0;
+function tickersToArray(tickers: Record<string, TickerData>): LiveMarketData[] {
+  return Object.values(tickers).map((t) => ({
+    symbol: t.symbol,
+    price: t.lastPrice,
+    priceChange: 0,
+    priceChangePercent: t.priceChangePercent,
+    volume: t.volume,
+    quoteVolume: t.quoteVolume,
+    lastUpdate: t.closeTime,
+  }));
+}
 
-export function useBinanceData() {
-  const [marketData, setMarketData] = useState<Map<string, LiveMarketData>>(cachedMarketData);
-  const [connectionStatus, setConnectionStatus] = useState<BinanceConnectionStatus>('disconnected');
-  const [lastUpdateTime, setLastUpdateTime] = useState<number>(lastCacheUpdate);
-  const wsClientRef = useRef<BinanceWebSocketClient | null>(null);
-  const fallbackIntervalRef = useRef<NodeJS.Timeout | null>(null);
+export interface UseBinanceDataReturn {
+  /** New API: keyed by symbol */
+  tickers: Record<string, TickerData>;
+  connectionStatus: ConnectionStatus;
+  reconnect: () => void;
+  /** Legacy API: array of market data (kept for backward compat) */
+  marketData: LiveMarketData[];
+  isLive: boolean;
+  hasData: boolean;
+  /** Legacy single-symbol lookup */
+  getMarketData: (symbol: string) => LiveMarketData | null;
+  lastUpdateTime: number;
+}
 
-  const handleTickerUpdate = useCallback((data: BinanceTickerData) => {
-    const newData: LiveMarketData = {
-      symbol: data.symbol,
-      price: roundToTwoDecimals(parseFloat(data.price)),
-      priceChange: roundToTwoDecimals(parseFloat(data.priceChange)),
-      priceChangePercent: roundToTwoDecimals(parseFloat(data.priceChangePercent)),
-      volume: roundToTwoDecimals(parseFloat(data.volume)),
-      quoteVolume: roundToTwoDecimals(parseFloat(data.quoteVolume)),
-      lastUpdate: data.lastUpdateId,
-    };
-
-    // Update both local and module-level cache
-    setMarketData(prev => {
-      const newMap = new Map(prev);
-      newMap.set(data.symbol, newData);
-      cachedMarketData = newMap;
-      return newMap;
-    });
-    
-    const now = Date.now();
-    setLastUpdateTime(now);
-    lastCacheUpdate = now;
-  }, []);
-
-  const handleStatusChange = useCallback((status: BinanceConnectionStatus) => {
-    setConnectionStatus(status);
-    
-    // If connection fails, start fallback polling
-    if (status === 'error' || status === 'disconnected') {
-      startFallbackPolling();
-    } else if (status === 'connected') {
-      stopFallbackPolling();
-    }
-  }, []);
-
-  const startFallbackPolling = useCallback(() => {
-    if (fallbackIntervalRef.current) return;
-
-    console.log('Starting fallback REST API polling...');
-    
-    const pollPrices = async () => {
-      try {
-        const prices = await fetchBinancePrices([...WHITELISTED_SYMBOLS]);
-        
-        if (prices.size > 0) {
-          setMarketData(prev => {
-            const newMap = new Map(prev);
-            prices.forEach((price, symbol) => {
-              const existing = newMap.get(symbol);
-              const newData: LiveMarketData = {
-                symbol,
-                price: roundToTwoDecimals(price),
-                priceChange: existing?.priceChange || 0,
-                priceChangePercent: existing?.priceChangePercent || 0,
-                volume: existing?.volume || 0,
-                quoteVolume: existing?.quoteVolume || 0,
-                lastUpdate: Date.now(),
-              };
-              newMap.set(symbol, newData);
-            });
-            cachedMarketData = newMap;
-            return newMap;
-          });
-          const now = Date.now();
-          setLastUpdateTime(now);
-          lastCacheUpdate = now;
-        }
-      } catch (error) {
-        console.error('Fallback polling error:', error);
-      }
-    };
-
-    // Initial fetch
-    pollPrices();
-    
-    // Poll every 5 seconds
-    fallbackIntervalRef.current = setInterval(pollPrices, 5000);
-  }, []);
-
-  const stopFallbackPolling = useCallback(() => {
-    if (fallbackIntervalRef.current) {
-      clearInterval(fallbackIntervalRef.current);
-      fallbackIntervalRef.current = null;
-      console.log('Stopped fallback polling');
-    }
-  }, []);
+export function useBinanceData(): UseBinanceDataReturn {
+  const [tickers, setTickers] = useState<Record<string, TickerData>>({ ...tickerCache });
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(globalStatus);
 
   useEffect(() => {
-    // Initialize WebSocket connection
-    const client = new BinanceWebSocketClient(
-      [...WHITELISTED_SYMBOLS],
-      handleTickerUpdate,
-      handleStatusChange
-    );
+    initGlobalConnection();
 
-    wsClientRef.current = client;
-    client.connect();
+    const onStatus = (s: ConnectionStatus) => setConnectionStatus(s);
+    const onTicker = (t: Record<string, TickerData>) => setTickers(t);
 
-    // Cleanup on unmount
+    statusListeners.add(onStatus);
+    tickerListeners.add(onTicker);
+
+    // Sync current state immediately
+    setConnectionStatus(globalStatus);
+    setTickers({ ...tickerCache });
+
     return () => {
-      client.disconnect();
-      stopFallbackPolling();
+      statusListeners.delete(onStatus);
+      tickerListeners.delete(onTicker);
     };
-  }, [handleTickerUpdate, handleStatusChange, stopFallbackPolling]);
+  }, []);
 
-  const getMarketData = useCallback((symbol: string): LiveMarketData | null => {
-    return marketData.get(symbol) || null;
-  }, [marketData]);
+  const reconnect = useCallback(() => {
+    if (wsClient) {
+      wsClient.disconnect?.();
+      wsClient = null;
+    }
+    stopPolling();
+    initialized = false;
+    initGlobalConnection();
+  }, []);
 
-  const getAllMarketData = useCallback((): LiveMarketData[] => {
-    return Array.from(marketData.values());
-  }, [marketData]);
-
+  const marketData = tickersToArray(tickers);
   const isLive = connectionStatus === 'connected';
-  const hasData = marketData.size > 0;
+  const hasData = Object.keys(tickers).length > 0;
+
+  const getMarketData = useCallback(
+    (symbol: string): LiveMarketData | null => {
+      const t = tickers[symbol];
+      if (!t) return null;
+      return {
+        symbol: t.symbol,
+        price: t.lastPrice,
+        priceChange: 0,
+        priceChangePercent: t.priceChangePercent,
+        volume: t.volume,
+        quoteVolume: t.quoteVolume,
+        lastUpdate: t.closeTime,
+      };
+    },
+    [tickers]
+  );
 
   return {
-    marketData: getAllMarketData(),
-    getMarketData,
+    tickers,
     connectionStatus,
+    reconnect,
+    marketData,
     isLive,
     hasData,
-    lastUpdateTime,
+    getMarketData,
+    lastUpdateTime: Date.now(),
   };
 }

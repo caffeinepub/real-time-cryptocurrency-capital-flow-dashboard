@@ -1,39 +1,257 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add PWA Install Button to App Header/UI",
+  "title": "Fix PWA standalone install + crypto market analysis app (mobile-first)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Add a prominent 'Install App' button in the Header component that triggers PWA installation prompts using existing pwaUtils and PWAInstallPrompt logic, with platform-specific handling for iOS, Android, and desktop",
+      "summary": "Fix PWA installation flow for native install prompts on mobile (Android Chrome and iOS Safari) with standalone mode support",
       "acceptanceCriteria": [
-        "An 'Install App' button is visible in the app UI when the app is not already installed/running in standalone mode.",
-        "Clicking the button on Android/Desktop triggers the native browser install prompt (beforeinstallprompt).",
-        "On iOS, clicking the button shows instructions for adding to home screen (since iOS does not support programmatic install prompts).",
-        "The button is hidden when the app is already running in standalone (installed) mode.",
-        "The button styling matches the existing neon dark theme used throughout the app.",
-        "The button is accessible and visible without requiring the user to scroll or navigate."
+        "On Android Chrome, the browser presents a native 'Add to Home Screen' install banner or the PWAInstallButton triggers the native beforeinstallprompt event.",
+        "On iOS Safari, the IOSInstallModal guides the user through Share → Add to Home Screen with clear steps.",
+        "After installation, launching from the home screen opens the app in standalone mode (no browser navigation bar visible).",
+        "The manifest.json has display: 'standalone', a valid start_url, scope, and icons including a maskable 512x512 variant.",
+        "The service worker is registered successfully on first page load with no console errors."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/Header.tsx",
+          "path": "frontend/public/manifest.json",
           "operation": "modify",
-          "description": "Import and integrate PWA install button functionality from pwaUtils.ts. Add a new install button element positioned prominently in the header (e.g., between the live status indicator and login button). Use pwaUtils.isStandalone() to conditionally render the button only when the app is not in standalone mode. Wire up onClick handler to call pwaUtils.promptInstall() which will handle platform detection and show appropriate install flow (native prompt for Android/Desktop, instructions modal for iOS). Apply neon theme styling consistent with existing header buttons. Verify pwaUtils usage instructions before implementing."
+          "description": "Verify and ensure display is set to 'standalone' (not 'browser'), start_url is '/', scope is '/', and all required icon sizes (192x192, 512x512, maskable 512x512) are correctly referenced with purpose attributes. Update name and short_name if needed for consistency with 'CryptoFlow Intelligence'."
+        },
+        {
+          "path": "frontend/index.html",
+          "operation": "modify",
+          "description": "Verify apple-mobile-web-app-capable is set to 'yes', apple-mobile-web-app-status-bar-style is present, theme-color meta tags are correct, and manifest link is present. Ensure viewport meta includes width=device-width, initial-scale=1, viewport-fit=cover for notch support."
+        },
+        {
+          "path": "frontend/src/service-worker.ts",
+          "operation": "modify",
+          "description": "Ensure the service worker registration logic is correct, all critical assets are precached, and the service worker activates immediately on first install. Add or verify skipWaiting() and clients.claim() calls for immediate activation."
+        },
+        {
+          "path": "frontend/src/main.tsx",
+          "operation": "modify",
+          "description": "Verify service worker registration happens immediately on app mount with proper error handling. Ensure registration returns a valid ServiceWorkerRegistration and logs success/failure clearly to console."
+        },
+        {
+          "path": "frontend/src/components/PWAInstallButton.tsx",
+          "operation": "modify",
+          "description": "Ensure beforeinstallprompt event listener is attached on component mount, the prompt is stored and triggered correctly on button click for Android Chrome. Verify platform detection logic correctly identifies iOS vs Android vs desktop. Ensure modals (IOSInstallModal) are triggered for iOS users."
+        },
+        {
+          "path": "frontend/src/components/IOSInstallModal.tsx",
+          "operation": "modify",
+          "description": "Verify the modal displays clear step-by-step instructions for iOS Safari users: (1) Tap Share icon, (2) Scroll and tap 'Add to Home Screen', (3) Confirm. Include visual cues or icons if needed. Ensure modal can be dismissed and does not block app usage."
         },
         {
           "path": "frontend/src/lib/pwaUtils.ts",
           "operation": "modify",
-          "description": "Review and ensure the existing promptInstall() function handles all platform cases correctly: (1) iOS detection triggers instructions display, (2) Android/Desktop with captured beforeinstallprompt event triggers native prompt, (3) fallback messaging for unsupported scenarios. Ensure isStandalone() correctly detects when app is running as installed PWA. Add any missing platform detection logic if needed. Ensure the install prompt event listener is properly attached and stored for later use."
-        },
-        {
-          "path": "frontend/src/components/PWAInstallPrompt.tsx",
-          "operation": "modify",
-          "description": "Ensure the existing PWAInstallPrompt component (currently used for automatic prompts with cooldown) can be reused or its logic can be leveraged by the new Header install button. If needed, extract reusable iOS instruction modal or platform-specific messaging into a shared utility or component that both the automatic prompt and the Header button can use. Verify the component respects the user's dismissal preferences and doesn't conflict with the new Header button trigger."
+          "description": "Review and enhance utility functions for detecting standalone mode (window.matchMedia('(display-mode: standalone)')), platform detection (iOS/Android/desktop), and PWA installation eligibility. Ensure functions return accurate boolean values and handle edge cases."
         },
         {
           "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Ensure the beforeinstallprompt event listener setup (if present in App.tsx) correctly stores the event for later use by pwaUtils.promptInstall(). If the event capture logic is not yet in pwaUtils or App.tsx, add a global listener that captures the beforeinstallprompt event and stores it in a module-level variable accessible to pwaUtils. This ensures the Header install button can trigger the native install prompt when clicked."
+          "description": "Wire the PWAInstallButton into the main App layout or Header so users see the install prompt on first visit. Ensure the button is visible and accessible on mobile screens without scrolling. Consider placing it in the Header or as a floating action button."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Build responsive mobile-first cryptocurrency market analysis dashboard with live price ticker, asset detail cards, capital flow, confluence zones, and 3D bubble visualization",
+      "acceptanceCriteria": [
+        "On screens narrower than 768px, the layout stacks vertically with a bottom tab navigation bar for switching between sections.",
+        "On screens wider than 1024px, a sidebar or multi-column layout is used.",
+        "Live prices and 24h change percentages are visible on the main screen without scrolling on mobile.",
+        "Trend sparklines render correctly on mobile without overflow or clipping.",
+        "All interactive elements (buttons, tabs, cards) have a minimum tap target of 44x44px.",
+        "The app works correctly in both portrait and landscape orientations on mobile."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Refactor the main App component to implement a mobile-first responsive layout. On mobile (<768px), render a bottom tab navigation bar (fixed position) with tabs for BubbleVisualization, CapitalFlow, ConfluenceZones, and FuturesMonitor. On desktop (>=1024px), use a sidebar or horizontal tab layout. Ensure touch-friendly tap targets (min 44x44px) for all navigation elements. Remove or adapt the standalone order-flow URL parameter mode if it conflicts with the new navigation."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Redesign the Header component for mobile-first layout. On mobile, display only the logo and live status indicator in a compact horizontal layout. Hide or collapse the navigation buttons on mobile (they will be in the bottom tab bar). On desktop, show full navigation. Ensure the header is sticky and does not obstruct content on small screens."
+        },
+        {
+          "path": "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+          "operation": "modify",
+          "description": "Add a live price ticker section at the top of the BubbleVisualization tab that displays top cryptocurrencies with their current price and 24h change percentage. Use the useBinanceData hook to fetch live ticker data. Render prices in a horizontally scrollable list on mobile with monospace font and green/red color coding. Ensure the ticker is visible without scrolling and does not overlap the 3D canvas."
+        },
+        {
+          "path": "frontend/src/components/BubbleVisualization.tsx",
+          "operation": "modify",
+          "description": "Ensure the 3D canvas is responsive and adapts to mobile viewport sizes. On mobile, reduce canvas height if needed to fit within viewport. Ensure touch gestures (pinch-to-zoom, pan) work correctly with OrbitControls. Test that bubbles are tappable on mobile devices."
+        },
+        {
+          "path": "frontend/src/components/BubbleDetailPanel.tsx",
+          "operation": "modify",
+          "description": "Adapt the BubbleDetailPanel to be mobile-friendly. On mobile, make the panel slide in from the bottom (instead of side) and occupy most of the screen height. Ensure the panel has a drag-to-dismiss handle or a large close button. Display asset price, 24h change, volume, and a trend sparkline chart. Ensure all text is readable on small screens and tap targets are adequate."
+        },
+        {
+          "path": "frontend/src/surfaces/CapitalFlowTabSurface.tsx",
+          "operation": "modify",
+          "description": "Enhance the CapitalFlowTabSurface to display a capital flow section showing which assets are gaining vs. losing momentum. Use the FlowVisualization component and add a summary card above it that lists top gainers and losers with visual indicators (arrows, colors). Ensure the layout stacks vertically on mobile and uses columns on desktop."
+        },
+        {
+          "path": "frontend/src/components/FlowVisualization.tsx",
+          "operation": "modify",
+          "description": "Ensure FlowVisualization adapts to mobile screens. Display flows as a vertical list or compact cards on mobile. Show flow direction arrows, intensity indicators, and PnL ratios. Ensure text is legible and spacing is adequate for touch interaction. On desktop, use a more expansive flow diagram or multi-column layout."
+        },
+        {
+          "path": "frontend/src/surfaces/ConfluenceZonesTabSurface.tsx",
+          "operation": "modify",
+          "description": "Enhance the ConfluenceZonesTabSurface to display a confluence zones panel highlighting key technical levels. Show each confluence zone as a card with indicators list and intensity score. On mobile, stack zones vertically in a scrollable list. On desktop, use a grid layout. Ensure tap targets are 44x44px minimum."
+        },
+        {
+          "path": "frontend/src/components/ConfluenceZones.tsx",
+          "operation": "modify",
+          "description": "Adapt ConfluenceZones component for mobile-first layout. Display each zone as a card with symbol, indicators (as badges), and intensity (color-coded bar or score). Ensure cards are touch-friendly and stack vertically on mobile. Add spacing and padding for readability on small screens."
+        },
+        {
+          "path": "frontend/src/components/TrendChart.tsx",
+          "operation": "modify",
+          "description": "Ensure the TrendChart (sparkline) component is fully responsive and renders correctly on mobile without overflow or clipping. Use aspect-ratio or responsive width/height to adapt to container size. Ensure the chart is readable and interactive (tooltip on hover/tap) on mobile devices. Use neon accent colors for the area fill and stroke."
+        },
+        {
+          "path": "frontend/src/hooks/useTrendChartData.ts",
+          "operation": "modify",
+          "description": "Review and ensure the useTrendChartData hook fetches appropriate data for mobile sparklines (4-hour interval is fine). Ensure data is formatted correctly for the TrendChart component and includes all necessary fields (time, open, high, low, close)."
+        },
+        {
+          "path": "frontend/src/components/AssetDetailCard.tsx",
+          "operation": "create",
+          "description": "Create a new AssetDetailCard component that displays individual asset detail cards for the dashboard. Each card should show: asset name/symbol, current price (monospace font), 24h change percentage (green/red), volume, and a small trend sparkline. Use card-based layout with adequate padding and spacing for mobile. Ensure tap targets are 44x44px minimum. Export the component for use in tab surfaces."
+        },
+        {
+          "path": "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+          "operation": "modify",
+          "description": "Wire the new AssetDetailCard component into the BubbleVisualizationTabSurface. Below the live price ticker, render a grid of AssetDetailCard components for top cryptocurrencies. On mobile, display cards in a single column or 2-column grid. On desktop, use 3 or 4 columns. Fetch data using useBubbleAssets or useBinanceData hook."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Wire real-time Binance market data (prices, 24h changes, volume) with live updates, connection status indicator, and WebSocket/REST fallback",
+      "acceptanceCriteria": [
+        "Prices update in real-time on screen without requiring a manual refresh.",
+        "A live/offline status indicator is visible in the header.",
+        "If the WebSocket disconnects, the app automatically falls back to REST polling without crashing.",
+        "Data is shown within 3 seconds of the app loading on a standard mobile connection."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure the useBinanceData hook is initialized at the App level so that WebSocket connection is established immediately on app load. Pass the live data down via context or prop drilling to child components that need it (or rely on the module-level cache in binanceService). Verify that connection status is accessible globally."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Wire the live connection status indicator into the Header. Use the useBinanceData hook to get the current connection status (connected/disconnected/loading). Display a visible indicator (dot or badge) with green for connected, red for disconnected, and yellow for loading. Ensure the indicator is prominent and readable on mobile."
+        },
+        {
+          "path": "frontend/src/hooks/useBinanceData.ts",
+          "operation": "modify",
+          "description": "Review and ensure the useBinanceData hook correctly manages WebSocket connection lifecycle, handles disconnections gracefully, and falls back to REST polling (using binanceService REST methods) when WebSocket drops. Ensure the hook exposes connection status ('connected', 'disconnected', 'polling') and live ticker data. Add retry logic if needed."
+        },
+        {
+          "path": "frontend/src/lib/binanceService.ts",
+          "operation": "modify",
+          "description": "Ensure the BinanceWebSocketClient class in binanceService handles connection drops gracefully and triggers a fallback to REST polling. Verify the module-level cache is updated correctly from both WebSocket and REST sources. Ensure the service emits status updates that can be consumed by hooks. Add connection timeout and retry logic if missing."
+        },
+        {
+          "path": "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+          "operation": "modify",
+          "description": "Ensure the live price ticker section updates in real-time using data from useBinanceData. Display prices and 24h changes that reflect the latest market data without requiring user refresh. Show a loading state while initial data is fetched. Ensure updates are smooth and do not cause layout shift."
+        },
+        {
+          "path": "frontend/src/components/AssetDetailCard.tsx",
+          "operation": "modify",
+          "description": "Ensure the AssetDetailCard component displays live data from useBinanceData. Update prices and 24h changes in real-time as data streams in. Use green/red color coding for positive/negative changes. Ensure monospace font is used for numeric values."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Verify the 'Real-Time Data Active' status indicator in the Footer is wired to the actual connection status from useBinanceData. Update the indicator text or color to reflect the current state (active/polling/offline). Ensure consistency with the Header status indicator."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Apply dark-mode-only visual theme optimized for financial data with high-contrast backgrounds, neon accents, monospace font, and consistent card-based layout",
+      "acceptanceCriteria": [
+        "All screens use a dark background (no light mode switch required).",
+        "Positive price changes display in green, negative in red, consistently across all components.",
+        "Numeric price values use a monospace or JetBrains Mono font.",
+        "No white or light backgrounds appear on any screen.",
+        "The theme is consistent across BubbleVisualization, CapitalFlow, ConfluenceZones, and OrderFlow tabs."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Ensure the global CSS defines a dark-mode-only theme. Set the root background to near-black using existing OKLCH custom properties (--background or similar). Ensure neon accent colors (green for positive, red for negative) are defined as CSS variables. Apply JetBrains Mono or a monospace font to all numeric values using a utility class (e.g., .font-mono). Remove or override any light mode CSS. Add utility classes for consistent card styling (dark background, subtle border, padding)."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Verify the Tailwind config enforces dark mode globally. Ensure the neon color palette (green, red, accent colors) is correctly defined and available as utility classes. Ensure font families include JetBrains Mono or a monospace font for numeric text. Add or verify custom spacing/sizing for mobile-friendly tap targets and card layouts."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure the root App component applies a dark background class (e.g., bg-background or bg-neutral-950) to the main container. Verify no light-colored backgrounds leak through. Ensure the ThemeProvider (if used) defaults to dark mode with no toggle."
+        },
+        {
+          "path": "frontend/src/components/AssetDetailCard.tsx",
+          "operation": "modify",
+          "description": "Apply the dark theme to AssetDetailCard: use dark background, subtle border, neon green for positive changes, neon red for negative changes, and monospace font for all numeric values (price, percentage, volume). Ensure card has consistent padding and spacing. Use existing OKLCH CSS variables for colors."
+        },
+        {
+          "path": "frontend/src/components/BubbleDetailPanel.tsx",
+          "operation": "modify",
+          "description": "Apply the dark theme to BubbleDetailPanel: dark background, neon accents, monospace font for numeric values. Ensure the panel backdrop is dark with transparency. Use green/red color coding for trend indicators. Ensure the panel styling is consistent with the rest of the app."
+        },
+        {
+          "path": "frontend/src/components/FlowVisualization.tsx",
+          "operation": "modify",
+          "description": "Apply the dark theme to FlowVisualization: dark background for cards, neon green/red for flow direction indicators (gaining/losing momentum), monospace font for volume and PnL values. Ensure consistent card styling with other components."
+        },
+        {
+          "path": "frontend/src/components/ConfluenceZones.tsx",
+          "operation": "modify",
+          "description": "Apply the dark theme to ConfluenceZones: dark background for zone cards, neon accent colors for intensity indicators, monospace font for numeric scores. Use color-coded intensity bars (green/yellow/red) to show strength. Ensure card styling is consistent."
+        },
+        {
+          "path": "frontend/src/surfaces/FuturesMonitorTabSurface.tsx",
+          "operation": "modify",
+          "description": "Ensure the FuturesMonitorTabSurface and its child OrderFlowMonitor use the dark theme. Verify dark backgrounds, neon accents, and monospace font for all numeric values (prices, volumes, stats). Ensure theme consistency with other tabs."
+        },
+        {
+          "path": "frontend/src/components/OrderFlowMonitor.tsx",
+          "operation": "modify",
+          "description": "Apply the dark theme to OrderFlowMonitor: dark background, neon green/red for price movements, monospace font for all numeric stats. Ensure controls, alerts, and confluence panels use consistent dark card styling. Verify no light backgrounds appear."
+        },
+        {
+          "path": "frontend/src/components/TrendChart.tsx",
+          "operation": "modify",
+          "description": "Apply the dark theme to TrendChart: dark background, neon colors for the area fill and stroke (green for uptrend, red for downtrend). Ensure axis labels and tooltips use light text on dark background. Use monospace font for numeric labels. Ensure the chart is visually consistent with the overall theme."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Apply the dark theme to Header: dark background, neon accents for the logo or branding, light text for navigation labels. Ensure the live status indicator uses neon green/red colors. Ensure the header is visually consistent with the rest of the app."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Apply the dark theme to Footer: dark background, light text, neon accent for the status indicator. Ensure consistent styling with the rest of the app."
         }
       ]
     }

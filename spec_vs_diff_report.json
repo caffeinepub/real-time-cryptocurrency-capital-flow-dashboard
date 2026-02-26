@@ -1,26 +1,70 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T11:47:47.829Z",
-  "summary": "The diff implements a PWAInstallButton component and integrates it into the Header. Most REQ-1 acceptance criteria are met: the button is hidden in standalone mode, handles iOS/Android/desktop flows, uses neon styling, and is placed in the sticky header. However, the implementation duplicates installation detection logic inline rather than reusing existing pwaUtils.ts and PWAInstallPrompt.tsx as required by both the constraint and REQ-1.",
+  "generatedAt": "2026-02-26T23:17:18.370Z",
+  "summary": "The diff implements substantial portions of all four requirements. REQ-1 (PWA) is well covered with manifest.json, service worker, PWAInstallButton, IOSInstallModal, and pwaUtils. REQ-2 (dashboard) is covered with mobile bottom tab nav, asset detail cards, sparklines, capital flow, confluence zones, and bubble visualization surfaces. REQ-3 (real-time data) is covered with useBinanceData singleton, WebSocket + REST polling fallback, and connection status indicator. REQ-4 (dark theme) is covered with OKLCH CSS vars, neon colors, JetBrains Mono, and consistent dark backgrounds. A few specific acceptance criteria have gaps or cannot be confirmed from the truncated diff.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "The button should use the existing pwaUtils.ts install prompt utilities and the PWAInstallPrompt.tsx component logic. Do not duplicate installation detection or prompt management code.",
-      "reason": "PWAInstallButton.tsx re-implements platform detection (detectPlatform), standalone checking (checkIsStandalone), and deferred prompt capture (captureDeferredPrompt) inline instead of importing from the existing pwaUtils.ts. It also does not reuse PWAInstallPrompt.tsx component logic as required by the constraint.",
+      "requirement": "On screens wider than 1024px, a sidebar or multi-column layout is used (REQ-2 AC). The diff shows desktop header nav and lg: breakpoints in the grid, but no explicit sidebar layout for desktop is visible.",
+      "reason": "App.tsx and surface files show bottom tab nav hidden on lg+, but no sidebar component or multi-column page layout such as sidebar plus main content is shown for desktop. The grid inside BubbleVisualizationTabSurface goes to xl:grid-cols-4 but that is an asset card grid, not a page-level sidebar layout.",
       "evidence": [
-        "frontend/src/components/PWAInstallButton.tsx"
+        "frontend/src/App.tsx",
+        "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx"
+      ]
+    },
+    {
+      "requirement": "Live prices and 24h change percentages visible on the main screen without scrolling on mobile (REQ-2 AC).",
+      "reason": "The LivePriceTicker uses overflow-x-auto with min-w-max, meaning users must scroll horizontally to see all tickers. The requirement specifies prices visible without scrolling.",
+      "evidence": [
+        "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.85,
+  "hallucinated_features": [
+    {
+      "description": "PWA update toast notification via usePWAUpdateToast hook that polls for service worker updates every 5 minutes and shows a toast with an Update action button.",
+      "reason": "The build request does not mention a PWA update notification or update toast. This is an extra feature not in any requirement or acceptance criterion.",
+      "evidence": [
+        "frontend/src/hooks/usePWAUpdateToast.ts"
+      ]
+    },
+    {
+      "description": "App shortcuts in manifest.json for Mercado and Fluxo de Capital with URL parameters.",
+      "reason": "The build request does not mention app shortcuts as a requirement. This is an extra manifest feature beyond what was specified.",
+      "evidence": [
+        "frontend/public/manifest.json"
+      ]
+    },
+    {
+      "description": "PWA screenshots in manifest.json with mobile 720x1280 and desktop 1280x720 form_factor entries.",
+      "reason": "Screenshots in the manifest were not requested in any requirement or acceptance criterion.",
+      "evidence": [
+        "frontend/public/manifest.json"
+      ]
+    }
+  ],
+  "confidence": 0.78,
   "changed_files": [
     "frontend-file-summaries.txt",
+    "frontend/index.html",
+    "frontend/public/manifest.json",
     "frontend/src/App.tsx",
+    "frontend/src/components/AssetDetailCard.tsx",
+    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
+    "frontend/src/components/IOSInstallModal.tsx",
     "frontend/src/components/PWAInstallButton.tsx",
+    "frontend/src/components/TrendChart.tsx",
+    "frontend/src/hooks/useBinanceData.ts",
+    "frontend/src/hooks/usePWAUpdateToast.ts",
+    "frontend/src/index.css",
+    "frontend/src/lib/binanceService.ts",
+    "frontend/src/lib/pwaUtils.ts",
+    "frontend/src/service-worker.ts",
     "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+    "frontend/src/surfaces/CapitalFlowTabSurface.tsx",
+    "frontend/src/surfaces/ConfluenceZonesTabSurface.tsx",
+    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

@@ -1,16 +1,45 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [],
+  "summary": "Cryptocurrency market data analysis app with PWA support (standalone mode, installable from home screen), optimized for mobile but also responsive for desktop.",
+  "architectural_notes": [
+    "App must have a valid Web App Manifest with display: standalone and a registered Service Worker for PWA installability",
+    "Use CoinGecko or similar public API for real-time crypto data"
+  ],
+  "known_issues": [
+    "PWA install prompt not appearing on mobile — only shortcut link offered instead of native install"
+  ],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-add-a-prominent-install-app-button-in-the-application-ui-e-g-in-the-header-component-alongside-existing-navigation-controls-that-triggers-the-pwa-installation-prompt-the-button-should-use-the-existing-pwautils-ts-install-prompt-utilities-and-the-pwainstallprompt-tsx-component-logic-the-button-must-1-only-be-visible-when-the-app-is-not-already-running-in-standalone-installed-mode-2-handle-ios-show-install-instructions-android-and-desktop-flows-appropriately-3-display-a-platform-appropriate-label-such-as-install-app-or-add-to-home-screen-and-4-be-styled-consistently-with-the-existing-neon-dark-theme",
-      "title": "Add a prominent 'Install App' button in the application UI (e.g., in the Header component alongside existing navigation controls) that triggers the PWA installation prompt. The button should use the existing `pwaUtils.ts` install prompt utilities and the `PWAInstallPrompt.tsx` component logic. The button must: (1) only be visible when the app is not already running in standalone/installed mode, (2) handle iOS (show install instructions), Android, and desktop flows appropriately, (3) display a platform-appropriate label such as 'Install App' or 'Add to Home Screen', and (4) be styled consistently with the existing neon dark theme.",
+      "id": "feature-fix-the-pwa-installation-flow-so-that-mobile-browsers-android-chrome-and-ios-safari-present-a-native-install-prompt-or-guided-install-instructions-allowing-the-app-to-be-added-to-the-home-screen-and-launched-in-standalone-mode-no-browser-ui-address-bar-the-web-app-manifest-must-declare-display-standalone-have-correct-start-url-include-all-required-icon-sizes-192x192-512x512-with-maskable-variants-and-the-service-worker-must-be-correctly-registered-on-first-load",
+      "title": "Fix the PWA installation flow so that mobile browsers (Android Chrome and iOS Safari) present a native install prompt or guided install instructions, allowing the app to be added to the home screen and launched in standalone mode (no browser UI/address bar). The web app manifest must declare display: standalone, have correct start_url, include all required icon sizes (192x192, 512x512 with maskable variants), and the service worker must be correctly registered on first load.",
       "reqIds": [
         "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-a-responsive-cryptocurrency-market-analysis-dashboard-that-is-optimized-for-mobile-primary-and-fully-functional-on-desktop-the-app-must-display-1-a-live-price-ticker-list-with-24h-price-change-percentages-for-the-top-cryptocurrencies-2-individual-asset-detail-cards-showing-price-volume-and-a-sparkline-trend-chart-3-a-capital-flow-section-showing-which-assets-are-gaining-vs-losing-momentum-4-a-confluence-zones-panel-highlighting-key-technical-levels-and-5-the-existing-3d-bubble-visualization-for-high-convergence-assets-all-layouts-must-use-a-mobile-first-responsive-design-with-touch-friendly-tap-targets",
+      "title": "Build a responsive cryptocurrency market analysis dashboard that is optimized for mobile (primary) and fully functional on desktop. The app must display: (1) a live price ticker list with 24h price change percentages for the top cryptocurrencies; (2) individual asset detail cards showing price, volume, and a sparkline/trend chart; (3) a capital flow section showing which assets are gaining vs. losing momentum; (4) a confluence zones panel highlighting key technical levels; and (5) the existing 3D bubble visualization for high-convergence assets. All layouts must use a mobile-first responsive design with touch-friendly tap targets.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-real-time-cryptocurrency-market-data-prices-24h-changes-volume-from-binance-public-websocket-and-rest-apis-is-fetched-and-displayed-with-live-updates-the-existing-usebinancedata-hook-and-binanceservice-must-be-wired-to-the-main-dashboard-view-so-users-see-live-data-immediately-on-load-with-a-visible-connection-status-indicator-and-graceful-fallback-to-rest-polling-if-the-websocket-connection-drops",
+      "title": "Ensure real-time cryptocurrency market data (prices, 24h changes, volume) from Binance public WebSocket and REST APIs is fetched and displayed with live updates. The existing useBinanceData hook and binanceService must be wired to the main dashboard view so users see live data immediately on load, with a visible connection status indicator and graceful fallback to REST polling if the WebSocket connection drops.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-dark-mode-only-visual-theme-optimized-for-financial-data-readability-on-mobile-screens-high-contrast-backgrounds-near-black-neon-accent-colors-for-price-up-down-indicators-green-for-positive-red-for-negative-monospace-font-for-price-values-and-a-clean-card-based-layout-the-theme-must-be-consistent-across-all-tabs-and-surfaces-using-the-existing-oklch-css-custom-properties-and-neon-tailwind-palette-already-defined-in-the-project",
+      "title": "Apply a dark-mode-only visual theme optimized for financial data readability on mobile screens: high-contrast backgrounds (near-black), neon accent colors for price up/down indicators (green for positive, red for negative), monospace font for price values, and a clean card-based layout. The theme must be consistent across all tabs and surfaces, using the existing OKLCH CSS custom properties and neon Tailwind palette already defined in the project.",
+      "reqIds": [
+        "REQ-4"
       ],
       "version": 1
     }
@@ -18,12 +47,25 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Add a button in the app to prompt/force PWA installation so it can be used without a browser",
+      "summary": "PWA standalone mode — installable from home screen without browser UI",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Real-time cryptocurrency market data (prices, changes, charts)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Responsive design optimized for mobile and desktop",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Crypto Confluence Bubbles",
+  "gameProjectType": "none",
+  "projectName": "Crypto Market Analyzer",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

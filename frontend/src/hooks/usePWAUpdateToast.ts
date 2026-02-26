@@ -3,58 +3,53 @@ import { toast } from 'sonner';
 import { checkForUpdates, activateUpdate } from '@/lib/pwaUtils';
 
 /**
- * Hook to check for PWA updates and show toast notification
+ * Hook to check for PWA updates and show a toast notification.
  */
 export function usePWAUpdateToast() {
   useEffect(() => {
-    // Don't check for updates if service worker is not supported
-    if (!('serviceWorker' in navigator)) {
-      return;
-    }
+    if (!('serviceWorker' in navigator)) return;
 
     let hasShownToast = false;
 
-    // Check for updates on mount
     const checkAndNotify = async () => {
-      const hasUpdate = await checkForUpdates();
+      let reg: ServiceWorkerRegistration | undefined;
+      try {
+        reg = await navigator.serviceWorker.getRegistration();
+      } catch {
+        return;
+      }
+      if (!reg) return;
+
+      const hasUpdate = await checkForUpdates(reg);
       if (hasUpdate && !hasShownToast) {
         hasShownToast = true;
-        toast('Update Available', {
-          description: 'A new version of the app is available.',
+        toast('Atualização disponível', {
+          description: 'Uma nova versão do app está disponível.',
           duration: Infinity,
           action: {
-            label: 'Update',
-            onClick: () => {
-              activateUpdate();
-            },
+            label: 'Atualizar',
+            onClick: () => activateUpdate(reg),
           },
           cancel: {
-            label: 'Later',
+            label: 'Depois',
             onClick: () => {
-              // User dismissed, will check again on next visit
+              // dismissed
             },
           },
         });
       }
     };
 
-    // Check immediately
     checkAndNotify();
 
-    // Listen for service worker updates
     const handleControllerChange = () => {
-      if (!hasShownToast) {
-        checkAndNotify();
-      }
+      if (!hasShownToast) checkAndNotify();
     };
 
     navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
-    // Check periodically (every 5 minutes)
     const interval = setInterval(() => {
-      if (!hasShownToast) {
-        checkAndNotify();
-      }
+      if (!hasShownToast) checkAndNotify();
     }, 5 * 60 * 1000);
 
     return () => {

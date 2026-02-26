@@ -2,11 +2,16 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-prominent-install-app-button-in-the-application-ui-e-g-in-the-header-component-alongside-existing-navigation-controls-that-triggers-the-pwa-installation-prompt-the-button-should-use-the-existing-pwautils-ts-install-prompt-utilities-and-the-pwainstallprompt-tsx-component-logic-the-button-must-1-only-be-visible-when-the-app-is-not-already-running-in-standalone-installed-mode-2-handle-ios-show-install-instructions-android-and-desktop-flows-appropriately-3-display-a-platform-appropriate-label-such-as-install-app-or-add-to-home-screen-and-4-be-styled-consistently-with-the-existing-neon-dark-theme",
-      "featureTitle": "Add a prominent 'Install App' button in the application UI (e.g., in the Header component alongside existing navigation controls) that triggers the PWA installation prompt. The button should use the existing `pwaUtils.ts` install prompt utilities and the `PWAInstallPrompt.tsx` component logic. The button must: (1) only be visible when the app is not already running in standalone/installed mode, (2) handle iOS (show install instructions), Android, and desktop flows appropriately, (3) display a platform-appropriate label such as 'Install App' or 'Add to Home Screen', and (4) be styled consistently with the existing neon dark theme.",
+      "featureId": "feature-fix-the-pwa-installation-flow-so-that-mobile-browsers-android-chrome-and-ios-safari-present-a-native-install-prompt-or-guided-install-instructions-allowing-the-app-to-be-added-to-the-home-screen-and-launched-in-standalone-mode-no-browser-ui-address-bar-the-web-app-manifest-must-declare-display-standalone-have-correct-start-url-include-all-required-icon-sizes-192x192-512x512-with-maskable-variants-and-the-service-worker-must-be-correctly-registered-on-first-load",
+      "featureTitle": "Fix the PWA installation flow so that mobile browsers (Android Chrome and iOS Safari) present a native install prompt or guided install instructions, allowing the app to be added to the home screen and launched in standalone mode (no browser UI/address bar). The web app manifest must declare display: standalone, have correct start_url, include all required icon sizes (192x192, 512x512 with maskable variants), and the service worker must be correctly registered on first load.",
       "files": [
+        "frontend/index.html",
+        "frontend/public/manifest.json",
         "frontend/src/App.tsx",
-        "frontend/src/components/Header.tsx"
+        "frontend/src/components/IOSInstallModal.tsx",
+        "frontend/src/components/PWAInstallButton.tsx",
+        "frontend/src/lib/pwaUtils.ts",
+        "frontend/src/service-worker.ts"
       ],
       "components": [
         "http-outcalls@3.0.0",
@@ -19,6 +24,84 @@
       ],
       "testIds": [
         "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-a-responsive-cryptocurrency-market-analysis-dashboard-that-is-optimized-for-mobile-primary-and-fully-functional-on-desktop-the-app-must-display-1-a-live-price-ticker-list-with-24h-price-change-percentages-for-the-top-cryptocurrencies-2-individual-asset-detail-cards-showing-price-volume-and-a-sparkline-trend-chart-3-a-capital-flow-section-showing-which-assets-are-gaining-vs-losing-momentum-4-a-confluence-zones-panel-highlighting-key-technical-levels-and-5-the-existing-3d-bubble-visualization-for-high-convergence-assets-all-layouts-must-use-a-mobile-first-responsive-design-with-touch-friendly-tap-targets",
+      "featureTitle": "Build a responsive cryptocurrency market analysis dashboard that is optimized for mobile (primary) and fully functional on desktop. The app must display: (1) a live price ticker list with 24h price change percentages for the top cryptocurrencies; (2) individual asset detail cards showing price, volume, and a sparkline/trend chart; (3) a capital flow section showing which assets are gaining vs. losing momentum; (4) a confluence zones panel highlighting key technical levels; and (5) the existing 3D bubble visualization for high-convergence assets. All layouts must use a mobile-first responsive design with touch-friendly tap targets.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AssetDetailCard.tsx",
+        "frontend/src/components/Header.tsx",
+        "frontend/src/components/TrendChart.tsx",
+        "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+        "frontend/src/surfaces/CapitalFlowTabSurface.tsx",
+        "frontend/src/surfaces/ConfluenceZonesTabSurface.tsx"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-real-time-cryptocurrency-market-data-prices-24h-changes-volume-from-binance-public-websocket-and-rest-apis-is-fetched-and-displayed-with-live-updates-the-existing-usebinancedata-hook-and-binanceservice-must-be-wired-to-the-main-dashboard-view-so-users-see-live-data-immediately-on-load-with-a-visible-connection-status-indicator-and-graceful-fallback-to-rest-polling-if-the-websocket-connection-drops",
+      "featureTitle": "Ensure real-time cryptocurrency market data (prices, 24h changes, volume) from Binance public WebSocket and REST APIs is fetched and displayed with live updates. The existing useBinanceData hook and binanceService must be wired to the main dashboard view so users see live data immediately on load, with a visible connection status indicator and graceful fallback to REST polling if the WebSocket connection drops.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AssetDetailCard.tsx",
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Header.tsx",
+        "frontend/src/hooks/useBinanceData.ts",
+        "frontend/src/lib/binanceService.ts",
+        "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-dark-mode-only-visual-theme-optimized-for-financial-data-readability-on-mobile-screens-high-contrast-backgrounds-near-black-neon-accent-colors-for-price-up-down-indicators-green-for-positive-red-for-negative-monospace-font-for-price-values-and-a-clean-card-based-layout-the-theme-must-be-consistent-across-all-tabs-and-surfaces-using-the-existing-oklch-css-custom-properties-and-neon-tailwind-palette-already-defined-in-the-project",
+      "featureTitle": "Apply a dark-mode-only visual theme optimized for financial data readability on mobile screens: high-contrast backgrounds (near-black), neon accent colors for price up/down indicators (green for positive, red for negative), monospace font for price values, and a clean card-based layout. The theme must be consistent across all tabs and surfaces, using the existing OKLCH CSS custom properties and neon Tailwind palette already defined in the project.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AssetDetailCard.tsx",
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/Header.tsx",
+        "frontend/src/components/TrendChart.tsx",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "authorization@4.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
       ],
       "confidence": "high"
     }

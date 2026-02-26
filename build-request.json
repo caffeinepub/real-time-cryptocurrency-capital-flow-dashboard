@@ -1,40 +1,101 @@
 {
   "kind": "build_request",
-  "title": "Add PWA Install Button to App Header/UI",
-  "projectName": "Crypto Confluence Bubbles",
-  "priority": "normal",
+  "title": "Fix PWA standalone install + crypto market analysis app (mobile-first)",
+  "projectName": "CryptoFlow Intelligence",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add a prominent 'Install App' button in the application UI (e.g., in the Header component alongside existing navigation controls) that triggers the PWA installation prompt. The button should use the existing `pwaUtils.ts` install prompt utilities and the `PWAInstallPrompt.tsx` component logic. The button must: (1) only be visible when the app is not already running in standalone/installed mode, (2) handle iOS (show install instructions), Android, and desktop flows appropriately, (3) display a platform-appropriate label such as 'Install App' or 'Add to Home Screen', and (4) be styled consistently with the existing neon dark theme.",
+      "text": "Fix the PWA installation flow so that mobile browsers (Android Chrome and iOS Safari) present a native install prompt or guided install instructions, allowing the app to be added to the home screen and launched in standalone mode (no browser UI/address bar). The web app manifest must declare display: standalone, have correct start_url, include all required icon sizes (192x192, 512x512 with maskable variants), and the service worker must be correctly registered on first load.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-3",
+          "msg-5",
+          "msg-7"
         ],
         "quotes": [
-          "adicionar um botao no aplicativo para forçar a instalação como aplicativo pwa. Ainda nao estamos usando o aplicativo sem necessidade de browser."
+          "modo standalone (sem interface do navegador). Você pode acessá-lo diretamente da tela inicial do seu dispositivo.",
+          "o celular ainda nao oferece a instalacao nativa do aplicativo . Via browsee. Continua sendo oferecido apenas o link de atalho na tela inicial"
         ]
       },
       "acceptanceCriteria": [
-        "An 'Install App' button is visible in the app UI when the app is not already installed/running in standalone mode.",
-        "Clicking the button on Android/Desktop triggers the native browser install prompt (beforeinstallprompt).",
-        "On iOS, clicking the button shows instructions for adding to home screen (since iOS does not support programmatic install prompts).",
-        "The button is hidden when the app is already running in standalone (installed) mode.",
-        "The button styling matches the existing neon dark theme used throughout the app.",
-        "The button is accessible and visible without requiring the user to scroll or navigate."
+        "On Android Chrome, the browser presents a native 'Add to Home Screen' install banner or the PWAInstallButton triggers the native beforeinstallprompt event.",
+        "On iOS Safari, the IOSInstallModal guides the user through Share → Add to Home Screen with clear steps.",
+        "After installation, launching from the home screen opens the app in standalone mode (no browser navigation bar visible).",
+        "The manifest.json has display: 'standalone', a valid start_url, scope, and icons including a maskable 512x512 variant.",
+        "The service worker is registered successfully on first page load with no console errors."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Build a responsive cryptocurrency market analysis dashboard that is optimized for mobile (primary) and fully functional on desktop. The app must display: (1) a live price ticker list with 24h price change percentages for the top cryptocurrencies; (2) individual asset detail cards showing price, volume, and a sparkline/trend chart; (3) a capital flow section showing which assets are gaining vs. losing momentum; (4) a confluence zones panel highlighting key technical levels; and (5) the existing 3D bubble visualization for high-convergence assets. All layouts must use a mobile-first responsive design with touch-friendly tap targets.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "Eh um aplicativo de analise de dados sobre o mercado de criptomoedas.",
+          "Estou usando principalmente em celular. Mas deve servir para desktops tambem."
+        ]
+      },
+      "acceptanceCriteria": [
+        "On screens narrower than 768px, the layout stacks vertically with a bottom tab navigation bar for switching between sections.",
+        "On screens wider than 1024px, a sidebar or multi-column layout is used.",
+        "Live prices and 24h change percentages are visible on the main screen without scrolling on mobile.",
+        "Trend sparklines render correctly on mobile without overflow or clipping.",
+        "All interactive elements (buttons, tabs, cards) have a minimum tap target of 44x44px.",
+        "The app works correctly in both portrait and landscape orientations on mobile."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Ensure real-time cryptocurrency market data (prices, 24h changes, volume) from Binance public WebSocket and REST APIs is fetched and displayed with live updates. The existing useBinanceData hook and binanceService must be wired to the main dashboard view so users see live data immediately on load, with a visible connection status indicator and graceful fallback to REST polling if the WebSocket connection drops.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "Eh um aplicativo de analise de dados sobre o mercado de criptomoedas."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Prices update in real-time on screen without requiring a manual refresh.",
+        "A live/offline status indicator is visible in the header.",
+        "If the WebSocket disconnects, the app automatically falls back to REST polling without crashing.",
+        "Data is shown within 3 seconds of the app loading on a standard mobile connection."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Apply a dark-mode-only visual theme optimized for financial data readability on mobile screens: high-contrast backgrounds (near-black), neon accent colors for price up/down indicators (green for positive, red for negative), monospace font for price values, and a clean card-based layout. The theme must be consistent across all tabs and surfaces, using the existing OKLCH CSS custom properties and neon Tailwind palette already defined in the project.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All screens use a dark background (no light mode switch required).",
+        "Positive price changes display in green, negative in red, consistently across all components.",
+        "Numeric price values use a monospace or JetBrains Mono font.",
+        "No white or light backgrounds appear on any screen.",
+        "The theme is consistent across BubbleVisualization, CapitalFlow, ConfluenceZones, and OrderFlow tabs."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files listed in frontend.immutablePaths (useInternetIdentity.ts, useActor.ts, main.tsx, components/ui).",
-    "Reuse existing pwaUtils.ts and PWAInstallPrompt.tsx logic; do not duplicate installation detection or prompt management code."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "All Binance data must use public endpoints only — no API key required for market data display (Binance API credentials are optional for futures account features).",
+    "Keep all Motoko logic in backend/main.mo as a single actor."
   ],
   "nonGoals": [
-    "Do not modify backend logic or Motoko files.",
-    "Do not add push notification or background sync features.",
-    "Do not change the existing PWA manifest or service worker configuration.",
-    "Do not add a new full-page onboarding flow — only a button/inline prompt."
+    "Building a native Android APK or iOS app (only PWA installability is in scope).",
+    "Adding new backend data models beyond what already exists.",
+    "Light mode / theme switching.",
+    "User-facing trading or order execution features."
   ],
   "imageRequirements": {
     "required": [],

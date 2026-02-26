@@ -1,131 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Enhanced neon color system with increased vibrancy */
-    --neon-green: oklch(0.75 0.25 145);
-    --neon-cyan: oklch(0.75 0.20 195);
-    --neon-blue: oklch(0.65 0.25 240);
-    --neon-purple: oklch(0.65 0.28 290);
-    --neon-pink: oklch(0.70 0.27 350);
-    --neon-red: oklch(0.65 0.30 25);
-    --neon-orange: oklch(0.70 0.25 50);
-    --neon-yellow: oklch(0.80 0.22 95);
+    /* Dark-only neon crypto theme */
+    --background: oklch(0.08 0.01 240);
+    --foreground: oklch(0.92 0.02 240);
 
-    --background: oklch(0.12 0.02 240);
-    --foreground: oklch(0.95 0.01 240);
+    --surface: oklch(0.11 0.015 240);
+    --surface-2: oklch(0.14 0.015 240);
 
-    --card: oklch(0.15 0.02 240);
-    --card-foreground: oklch(0.95 0.01 240);
+    --card: oklch(0.11 0.015 240);
+    --card-foreground: oklch(0.92 0.02 240);
 
-    --popover: oklch(0.15 0.02 240);
-    --popover-foreground: oklch(0.95 0.01 240);
+    --popover: oklch(0.11 0.015 240);
+    --popover-foreground: oklch(0.92 0.02 240);
 
-    --primary: oklch(0.75 0.20 195);
-    --primary-foreground: oklch(0.12 0.02 240);
+    --primary: oklch(0.75 0.22 145);
+    --primary-foreground: oklch(0.08 0.01 240);
 
-    --secondary: oklch(0.25 0.03 240);
-    --secondary-foreground: oklch(0.95 0.01 240);
+    --secondary: oklch(0.14 0.015 240);
+    --secondary-foreground: oklch(0.92 0.02 240);
 
-    --muted: oklch(0.25 0.03 240);
-    --muted-foreground: oklch(0.60 0.02 240);
+    --muted: oklch(0.18 0.01 240);
+    --muted-foreground: oklch(0.55 0.02 240);
 
-    --accent: oklch(0.25 0.03 240);
-    --accent-foreground: oklch(0.95 0.01 240);
+    --accent: oklch(0.75 0.22 145);
+    --accent-foreground: oklch(0.08 0.01 240);
 
-    --destructive: oklch(0.65 0.30 25);
-    --destructive-foreground: oklch(0.95 0.01 240);
+    --destructive: oklch(0.62 0.25 25);
+    --destructive-foreground: oklch(0.92 0.02 240);
 
-    --border: oklch(0.25 0.03 240);
-    --input: oklch(0.25 0.03 240);
-    --ring: oklch(0.75 0.20 195);
+    --border: oklch(0.22 0.015 240);
+    --input: oklch(0.18 0.015 240);
+    --ring: oklch(0.75 0.22 145);
 
-    --radius: 0.5rem;
+    --neon-green: oklch(0.82 0.25 145);
+    --neon-red: oklch(0.62 0.25 25);
+    --neon-blue: oklch(0.65 0.22 250);
+    --neon-yellow: oklch(0.85 0.2 90);
 
-    --chart-1: oklch(0.75 0.20 195);
-    --chart-2: oklch(0.65 0.28 290);
-    --chart-3: oklch(0.70 0.27 350);
-    --chart-4: oklch(0.75 0.25 145);
-    --chart-5: oklch(0.80 0.22 95);
+    --radius: 0.75rem;
   }
 
-  .dark {
-    --background: oklch(0.12 0.02 240);
-    --foreground: oklch(0.95 0.01 240);
+  /* Force dark mode always */
+  html {
+    color-scheme: dark;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+    overflow-x: hidden;
+  }
+
+  /* Monospace for numbers */
+  .font-mono,
+  .tabular-nums {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
   }
 }
 
 @layer utilities {
-  .terminal-panel {
-    background: oklch(0.15 0.02 240 / 0.95);
-    border: 1px solid oklch(0.25 0.03 240 / 0.5);
-    backdrop-filter: blur(12px);
+  /* Safe area utilities for iOS PWA */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
   }
 
-  .terminal-header {
-    background: oklch(0.18 0.02 240 / 0.8);
-    border-bottom: 1px solid oklch(0.25 0.03 240 / 0.5);
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
-  .terminal-content {
-    background: oklch(0.12 0.02 240 / 0.6);
+  /* Slide up animation for bottom sheets */
+  .slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
-  .neon-glow-green {
-    box-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
-  }
-
-  .neon-glow-cyan {
-    box-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
-  }
-
-  .neon-glow-pink {
-    box-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
-  }
-
-  .neon-glow-purple {
-    box-shadow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple);
-  }
-
-  .animate-pulse-slow {
-    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-20px);
-    }
-  }
-
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
-  }
-
-  @keyframes glow {
+  @keyframes slideUp {
     from {
-      text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan);
+      transform: translateY(100%);
+      opacity: 0;
     }
     to {
-      text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 30px var(--neon-cyan);
+      transform: translateY(0);
+      opacity: 1;
     }
+  }
+
+  /* Neon glow effects */
+  .glow-green {
+    box-shadow: 0 0 12px oklch(0.82 0.25 145 / 0.4);
+  }
+  .glow-red {
+    box-shadow: 0 0 12px oklch(0.62 0.25 25 / 0.4);
+  }
+  .text-glow-green {
+    text-shadow: 0 0 8px oklch(0.82 0.25 145 / 0.6);
+  }
+}
+
+/* Standalone PWA mode */
+@media (display-mode: standalone) {
+  body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
 }

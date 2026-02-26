@@ -1,42 +1,148 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T11:47:47.832Z",
+  "generatedAt": "2026-02-26T23:17:18.375Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 4,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Add a prominent 'Install App' button in the application UI (e.g., in the Header component alongside existing navigation controls) that triggers the PWA installation prompt. The button should use the existing `pwaUtils.ts` install prompt utilities and the `PWAInstallPrompt.tsx` component logic. The button must: (1) only be visible when the app is not already running in standalone/installed mode, (2) handle iOS (show install instructions), Android, and desktop flows appropriately, (3) display a platform-appropriate label such as 'Install App' or 'Add to Home Screen', and (4) be styled consistently with the existing neon dark theme.",
+        "summary": "Fix the PWA installation flow so that mobile browsers (Android Chrome and iOS Safari) present a native install prompt or guided install instructions, allowing the app to be added to the home screen and launched in standalone mode (no browser UI/address bar). The web app manifest must declare display: standalone, have correct start_url, include all required icon sizes (192x192, 512x512 with maskable variants), and the service worker must be correctly registered on first load.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/Header.tsx",
+          "frontend/public/manifest.json",
+          "frontend/index.html",
+          "frontend/src/service-worker.ts",
+          "frontend/src/main.tsx",
+          "frontend/src/components/PWAInstallButton.tsx",
+          "frontend/src/components/IOSInstallModal.tsx",
           "frontend/src/lib/pwaUtils.ts",
-          "frontend/src/components/PWAInstallPrompt.tsx",
           "frontend/src/App.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/Header.tsx",
+          "frontend/public/manifest.json",
+          "frontend/index.html",
+          "frontend/src/service-worker.ts",
+          "frontend/src/components/PWAInstallButton.tsx",
+          "frontend/src/components/IOSInstallModal.tsx",
+          "frontend/src/lib/pwaUtils.ts",
           "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Build a responsive cryptocurrency market analysis dashboard that is optimized for mobile (primary) and fully functional on desktop. The app must display: (1) a live price ticker list with 24h price change percentages for the top cryptocurrencies; (2) individual asset detail cards showing price, volume, and a sparkline/trend chart; (3) a capital flow section showing which assets are gaining vs. losing momentum; (4) a confluence zones panel highlighting key technical levels; and (5) the existing 3D bubble visualization for high-convergence assets. All layouts must use a mobile-first responsive design with touch-friendly tap targets.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+          "frontend/src/components/BubbleVisualization.tsx",
+          "frontend/src/components/BubbleDetailPanel.tsx",
+          "frontend/src/surfaces/CapitalFlowTabSurface.tsx",
+          "frontend/src/components/FlowVisualization.tsx",
+          "frontend/src/surfaces/ConfluenceZonesTabSurface.tsx",
+          "frontend/src/components/ConfluenceZones.tsx",
+          "frontend/src/components/TrendChart.tsx",
+          "frontend/src/hooks/useTrendChartData.ts",
+          "frontend/src/components/AssetDetailCard.tsx",
+          "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+          "frontend/src/surfaces/CapitalFlowTabSurface.tsx",
+          "frontend/src/surfaces/ConfluenceZonesTabSurface.tsx",
+          "frontend/src/components/TrendChart.tsx",
+          "frontend/src/components/AssetDetailCard.tsx",
+          "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Ensure real-time cryptocurrency market data (prices, 24h changes, volume) from Binance public WebSocket and REST APIs is fetched and displayed with live updates. The existing useBinanceData hook and binanceService must be wired to the main dashboard view so users see live data immediately on load, with a visible connection status indicator and graceful fallback to REST polling if the WebSocket connection drops.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/hooks/useBinanceData.ts",
+          "frontend/src/lib/binanceService.ts",
+          "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+          "frontend/src/components/AssetDetailCard.tsx",
+          "frontend/src/components/Footer.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/hooks/useBinanceData.ts",
+          "frontend/src/lib/binanceService.ts",
+          "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+          "frontend/src/components/AssetDetailCard.tsx",
+          "frontend/src/components/Footer.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Apply a dark-mode-only visual theme optimized for financial data readability on mobile screens: high-contrast backgrounds (near-black), neon accent colors for price up/down indicators (green for positive, red for negative), monospace font for price values, and a clean card-based layout. The theme must be consistent across all tabs and surfaces, using the existing OKLCH CSS custom properties and neon Tailwind palette already defined in the project.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/App.tsx",
+          "frontend/src/components/AssetDetailCard.tsx",
+          "frontend/src/components/BubbleDetailPanel.tsx",
+          "frontend/src/components/FlowVisualization.tsx",
+          "frontend/src/components/ConfluenceZones.tsx",
+          "frontend/src/surfaces/FuturesMonitorTabSurface.tsx",
+          "frontend/src/components/OrderFlowMonitor.tsx",
+          "frontend/src/components/TrendChart.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/Footer.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/App.tsx",
+          "frontend/src/components/AssetDetailCard.tsx",
+          "frontend/src/components/TrendChart.tsx",
+          "frontend/src/components/Header.tsx",
+          "frontend/src/components/Footer.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "build-request.json",
+    "build-template/README.md",
     "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/index.html",
+    "frontend/public/manifest.json",
     "frontend/src/App.tsx",
+    "frontend/src/components/AssetDetailCard.tsx",
+    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
+    "frontend/src/components/IOSInstallModal.tsx",
     "frontend/src/components/PWAInstallButton.tsx",
+    "frontend/src/components/TrendChart.tsx",
+    "frontend/src/hooks/useBinanceData.ts",
+    "frontend/src/hooks/usePWAUpdateToast.ts",
+    "frontend/src/index.css",
+    "frontend/src/lib/binanceService.ts",
+    "frontend/src/lib/pwaUtils.ts",
+    "frontend/src/service-worker.ts",
     "frontend/src/surfaces/BubbleVisualizationTabSurface.tsx",
+    "frontend/src/surfaces/CapitalFlowTabSurface.tsx",
+    "frontend/src/surfaces/ConfluenceZonesTabSurface.tsx",
+    "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
