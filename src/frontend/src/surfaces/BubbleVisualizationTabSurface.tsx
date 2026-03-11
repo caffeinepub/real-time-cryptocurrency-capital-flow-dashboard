@@ -1,117 +1,136 @@
-import { AlertCircle, Info } from 'lucide-react';
-import BubbleVisualization from '../components/BubbleVisualization';
-import { useBubbleAssets } from '../hooks/useBubbleAssets';
-import { useBinanceData } from '../hooks/useBinanceData';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  ChevronRight,
+  Maximize2,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+import React, { Suspense, useState } from "react";
+import AssetDetailCard from "../components/AssetDetailCard";
+import { useBinanceData } from "../hooks/useBinanceData";
+import { useBubbleAssets } from "../hooks/useBubbleAssets";
+import { WHITELISTED_SYMBOLS } from "../lib/binanceService";
 
-export default function BubbleVisualizationTabSurface() {
-  const { data, isLoading, error } = useBubbleAssets();
-  const { connectionStatus, isLive, marketData } = useBinanceData();
+const BubbleVisualization = React.lazy(
+  () => import("../components/BubbleVisualization"),
+);
 
-  const bubbleAssets = data?.assets || [];
-  const hasBackendData = data?.hasBackendData || false;
-  const backendCount = data?.backendCount || 0;
+function SurfaceLoader() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-neon-green border-t-transparent rounded-full animate-spin" />
+        <span className="text-muted-foreground text-sm">
+          Carregando visualização 3D...
+        </span>
+      </div>
+    </div>
+  );
+}
+
+const TOP_SYMBOLS = [
+  "BTCUSDT",
+  "ETHUSDT",
+  "BNBUSDT",
+  "SOLUSDT",
+  "XRPUSDT",
+  "ADAUSDT",
+  "DOGEUSDT",
+  "AVAXUSDT",
+];
+
+function LivePriceTicker() {
+  const { tickers, connectionStatus: _connectionStatus } = useBinanceData();
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent">
-          Visualização de Convergência
+    <div className="overflow-x-auto scrollbar-hide">
+      <div className="flex gap-2 px-3 py-2 min-w-max">
+        {TOP_SYMBOLS.map((sym) => {
+          const ticker = tickers[sym];
+          const price = ticker?.lastPrice ?? 0;
+          const change = ticker?.priceChangePercent ?? 0;
+          const isPos = change > 0;
+          const isNeg = change < 0;
+          const displaySym = sym.replace("USDT", "");
+
+          return (
+            <div
+              key={sym}
+              className="flex items-center gap-2 bg-surface border border-border/40 rounded-lg px-3 py-1.5 flex-shrink-0"
+            >
+              <span className="text-xs font-bold text-foreground">
+                {displaySym}
+              </span>
+              <span className="font-mono text-xs text-foreground">
+                $
+                {price >= 1000
+                  ? price.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
+                  : price.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 4,
+                    })}
+              </span>
+              <span
+                className={`text-[10px] font-medium ${isPos ? "text-neon-green" : isNeg ? "text-neon-red" : "text-muted-foreground"}`}
+              >
+                {isPos ? "+" : ""}
+                {change.toFixed(2)}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function BubbleVisualizationTabSurface() {
+  const [show3D, setShow3D] = useState(false);
+  const displaySymbols = TOP_SYMBOLS.concat(
+    WHITELISTED_SYMBOLS.filter((s) => !TOP_SYMBOLS.includes(s)).slice(0, 8),
+  );
+
+  return (
+    <div className="flex flex-col">
+      {/* Live Price Ticker */}
+      <div className="border-b border-border/40 bg-background/50">
+        <LivePriceTicker />
+      </div>
+
+      {/* 3D Visualization Toggle */}
+      <div className="px-3 pt-3 pb-1 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-foreground">
+          Visão do Mercado
         </h2>
-        <p className="text-muted-foreground">
-          Ativos com alta convergência de fluxo de capital e zonas técnicas
-        </p>
-        <div className="flex items-center gap-4 text-sm flex-wrap">
-          <span className="text-muted-foreground">
-            Status: <span className={isLive ? 'text-neon-green' : 'text-neon-pink'}>{isLive ? 'AO VIVO' : 'OFFLINE'}</span>
-          </span>
-          <span className="text-muted-foreground">
-            Ativos: <span className="text-foreground font-semibold">{bubbleAssets.length}</span>
-          </span>
-          <span className="text-muted-foreground">
-            Mercado: <span className="text-foreground font-semibold">{marketData.length} símbolos</span>
-          </span>
-          {!hasBackendData && bubbleAssets.length > 0 && (
-            <span className="text-xs text-neon-yellow">
-              (Dados sintéticos de mercado)
-            </span>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={() => setShow3D(!show3D)}
+          className="flex items-center gap-1.5 text-xs text-neon-green border border-neon-green/30 rounded-lg px-2.5 py-1.5 hover:bg-neon-green/10 transition-colors min-h-[44px]"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+          {show3D ? "Ocultar 3D" : "Ver Bolhas 3D"}
+        </button>
       </div>
 
-      {/* Error Alert */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro ao carregar dados</AlertTitle>
-          <AlertDescription>
-            Não foi possível carregar os ativos de convergência. Tente novamente mais tarde.
-          </AlertDescription>
-        </Alert>
+      {/* 3D Bubble Visualization (collapsible) */}
+      {show3D && (
+        <div
+          className="mx-3 mb-3 rounded-xl overflow-hidden border border-border/40"
+          style={{ height: "300px" }}
+        >
+          <Suspense fallback={<SurfaceLoader />}>
+            <BubbleVisualization />
+          </Suspense>
+        </div>
       )}
 
-      {/* Connection Warning */}
-      {!isLive && !isLoading && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Conexão Offline</AlertTitle>
-          <AlertDescription>
-            A conexão com o mercado está offline. Os dados podem estar desatualizados.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Synthetic Data Info */}
-      {!hasBackendData && bubbleAssets.length > 0 && isLive && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertTitle>Dados de Mercado ao Vivo</AlertTitle>
-          <AlertDescription>
-            Exibindo ativos com movimentação significativa baseados em dados ao vivo da Binance. 
-            As bolhas representam os principais movimentos de preço e volume do mercado.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Visualization */}
-      <BubbleVisualization />
-
-      {/* Legend */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-card/30 rounded-lg border border-border/50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-neon-green/30 border-2 border-neon-green"></div>
-          <div>
-            <p className="text-sm font-medium">Tendência de Alta</p>
-            <p className="text-xs text-muted-foreground">Convergência bullish</p>
-          </div>
+      {/* Asset Cards Grid */}
+      <div className="px-3 pb-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+          {displaySymbols.map((sym) => (
+            <AssetDetailCard key={sym} symbol={sym} />
+          ))}
         </div>
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-neon-pink/30 border-2 border-neon-pink"></div>
-          <div>
-            <p className="text-sm font-medium">Tendência de Baixa</p>
-            <p className="text-xs text-muted-foreground">Convergência bearish</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-neon-yellow/30 border-2 border-neon-yellow"></div>
-          <div>
-            <p className="text-sm font-medium">Tendência Neutra</p>
-            <p className="text-xs text-muted-foreground">Convergência lateral</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Instructions */}
-      <div className="p-4 bg-card/20 rounded-lg border border-border/30">
-        <h3 className="text-sm font-semibold mb-2">Como usar:</h3>
-        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-          <li>Clique e arraste para rotacionar a visualização</li>
-          <li>Use a roda do mouse para zoom</li>
-          <li>Clique em uma bolha para ver detalhes do ativo</li>
-          <li>Bolhas maiores indicam maior convergência ou movimentação</li>
-          <li>Cores indicam a tendência do ativo (verde=alta, vermelho=baixa, amarelo=neutro)</li>
-        </ul>
       </div>
     </div>
   );

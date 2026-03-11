@@ -1,66 +1,95 @@
-import { useState } from 'react';
-import { useHasBinanceCredentials, useAddOrUpdateBinanceCredentials, useRemoveBinanceCredentials, useTestBinanceConnection } from '../hooks/useBinanceFuturesMonitor';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, Key, Trash2, Loader2, Shield } from 'lucide-react';
-import { toast } from 'sonner';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Key,
+  Loader2,
+  Shield,
+  Trash2,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import {
+  useAddOrUpdateBinanceCredentials,
+  useHasBinanceCredentials,
+  useRemoveBinanceCredentials,
+  useTestBinanceConnection,
+} from "../hooks/useBinanceFuturesMonitor";
 
 export default function BinanceCredentialsPanel() {
-  const [apiKey, setApiKey] = useState('');
-  const [apiSecret, setApiSecret] = useState('');
+  const [apiKey, setApiKey] = useState("");
+  const [apiSecret, setApiSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
 
-  const { data: hasCredentials, isLoading: checkingCredentials } = useHasBinanceCredentials();
+  const { data: hasCredentials, isLoading: checkingCredentials } =
+    useHasBinanceCredentials();
   const addOrUpdateMutation = useAddOrUpdateBinanceCredentials();
   const removeMutation = useRemoveBinanceCredentials();
   const testMutation = useTestBinanceConnection();
 
   const handleSave = async () => {
     if (!apiKey.trim() || !apiSecret.trim()) {
-      toast.error('Please enter both API Key and API Secret');
+      toast.error("Please enter both API Key and API Secret");
       return;
     }
 
     try {
-      await addOrUpdateMutation.mutateAsync({ apiKey: apiKey.trim(), apiSecret: apiSecret.trim() });
-      toast.success('Credentials saved successfully');
-      setApiKey('');
-      setApiSecret('');
+      await addOrUpdateMutation.mutateAsync({
+        apiKey: apiKey.trim(),
+        apiSecret: apiSecret.trim(),
+      });
+      toast.success("Credentials saved successfully");
+      setApiKey("");
+      setApiSecret("");
       setShowSecret(false);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save credentials');
+      toast.error(error.message || "Failed to save credentials");
     }
   };
 
   const handleRemove = async () => {
-    if (!confirm('Are you sure you want to remove your Binance credentials?')) {
+    if (!confirm("Are you sure you want to remove your Binance credentials?")) {
       return;
     }
 
     try {
       await removeMutation.mutateAsync();
-      toast.success('Credentials removed successfully');
-      setApiKey('');
-      setApiSecret('');
+      toast.success("Credentials removed successfully");
+      setApiKey("");
+      setApiSecret("");
     } catch (error: any) {
-      toast.error(error.message || 'Failed to remove credentials');
+      toast.error(error.message || "Failed to remove credentials");
     }
   };
 
   const handleTest = async () => {
     try {
       await testMutation.mutateAsync();
-      toast.success('Connection successful');
+      toast.success("Connection successful");
     } catch (error: any) {
-      const message = error.message || 'Connection failed';
-      toast.error(message.includes('No Binance credentials') ? 'Please save your credentials first' : 'Connection failed - please check your credentials');
+      const message = error.message || "Connection failed";
+      toast.error(
+        message.includes("No Binance credentials")
+          ? "Please save your credentials first"
+          : "Connection failed - please check your credentials",
+      );
     }
   };
 
-  const isLoading = addOrUpdateMutation.isPending || removeMutation.isPending || testMutation.isPending;
+  const isLoading =
+    addOrUpdateMutation.isPending ||
+    removeMutation.isPending ||
+    testMutation.isPending;
 
   return (
     <Card className="terminal-panel border-neon-yellow/30 bg-card/50">
@@ -68,7 +97,9 @@ export default function BinanceCredentialsPanel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Key className="w-5 h-5 text-neon-yellow" />
-            <CardTitle className="text-neon-yellow">Binance API Credentials</CardTitle>
+            <CardTitle className="text-neon-yellow">
+              Binance API Credentials
+            </CardTitle>
           </div>
           {!checkingCredentials && hasCredentials && (
             <div className="flex items-center gap-2 text-xs text-neon-green">
@@ -78,25 +109,32 @@ export default function BinanceCredentialsPanel() {
           )}
         </div>
         <CardDescription>
-          Configure your Binance API credentials for private account features (futures positions).
-          Public market data (Order Flow Monitor) does not require credentials.
+          Configure your Binance API credentials for private account features
+          (futures positions). Public market data (Order Flow Monitor) does not
+          require credentials.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert className="border-neon-yellow/30 bg-neon-yellow/5">
           <Shield className="h-4 w-4 text-neon-yellow" />
           <AlertDescription className="text-xs text-muted-foreground">
-            <strong className="text-neon-yellow">Security Notice:</strong> Use read-only API keys when possible. 
-            Your credentials are stored securely in your personal canister storage and never exposed in logs or network requests.
+            <strong className="text-neon-yellow">Security Notice:</strong> Use
+            read-only API keys when possible. Your credentials are stored
+            securely in your personal canister storage and never exposed in logs
+            or network requests.
             <br />
-            <strong className="text-neon-cyan mt-2 block">Note:</strong> Binance credentials are only required for private account operations (viewing positions, placing orders). 
-            Public Order Flow Monitor market data does not require API keys.
+            <strong className="text-neon-cyan mt-2 block">Note:</strong> Binance
+            credentials are only required for private account operations
+            (viewing positions, placing orders). Public Order Flow Monitor
+            market data does not require API keys.
           </AlertDescription>
         </Alert>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="apiKey" className="text-sm font-medium">API Key</Label>
+            <Label htmlFor="apiKey" className="text-sm font-medium">
+              API Key
+            </Label>
             <Input
               id="apiKey"
               type="text"
@@ -109,10 +147,12 @@ export default function BinanceCredentialsPanel() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="apiSecret" className="text-sm font-medium">API Secret</Label>
+            <Label htmlFor="apiSecret" className="text-sm font-medium">
+              API Secret
+            </Label>
             <Input
               id="apiSecret"
-              type={showSecret ? 'text' : 'password'}
+              type={showSecret ? "text" : "password"}
               placeholder="Enter your Binance API Secret"
               value={apiSecret}
               onChange={(e) => setApiSecret(e.target.value)}
@@ -124,7 +164,7 @@ export default function BinanceCredentialsPanel() {
               onClick={() => setShowSecret(!showSecret)}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              {showSecret ? 'Hide' : 'Show'} secret
+              {showSecret ? "Hide" : "Show"} secret
             </button>
           </div>
         </div>
@@ -202,7 +242,8 @@ export default function BinanceCredentialsPanel() {
           <Alert className="border-destructive/30 bg-destructive/5">
             <AlertCircle className="h-4 w-4 text-destructive" />
             <AlertDescription className="text-sm text-destructive">
-              Connection failed. Please verify your credentials and API permissions.
+              Connection failed. Please verify your credentials and API
+              permissions.
             </AlertDescription>
           </Alert>
         )}

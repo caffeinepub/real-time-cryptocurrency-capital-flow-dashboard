@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import { useBinanceData } from './useBinanceData';
-import type { BubbleAsset } from '../backend';
-import { roundToTwoDecimals } from '../lib/formatters';
-import { symbolsMatch } from '../lib/symbols';
+import { useQuery } from "@tanstack/react-query";
+import type { BubbleAsset } from "../backend";
+import { roundToTwoDecimals } from "../lib/formatters";
+import { symbolsMatch } from "../lib/symbols";
+import { useActor } from "./useActor";
+import { useBinanceData } from "./useBinanceData";
 
 export interface EnrichedBubbleAsset extends BubbleAsset {
   livePrice?: number;
@@ -22,7 +22,7 @@ export function useBubbleAssets() {
   const { marketData, isLive } = useBinanceData();
 
   return useQuery<BubbleAssetsQueryResult>({
-    queryKey: ['bubbleAssets'],
+    queryKey: ["bubbleAssets"],
     queryFn: async () => {
       if (!actor) {
         return { assets: [], backendCount: 0, hasBackendData: false };
@@ -37,24 +37,37 @@ export function useBubbleAssets() {
 
         // If backend has no assets but we have live market data, create synthetic bubbles
         if (bubbleAssets.length === 0 && marketData.length > 0) {
-          console.log('[Bubble Assets] No backend data, creating synthetic bubbles from live market data');
-          
+          console.log(
+            "[Bubble Assets] No backend data, creating synthetic bubbles from live market data",
+          );
+
           // Create synthetic bubble assets from top market movers
           const syntheticAssets: EnrichedBubbleAsset[] = marketData
-            .filter(m => Math.abs(m.priceChangePercent) > 1) // Only significant movers
+            .filter((m) => Math.abs(m.priceChangePercent) > 1) // Only significant movers
             .slice(0, 15) // Limit to top 15
-            .map(m => {
+            .map((m) => {
               const absChange = Math.abs(m.priceChangePercent);
-              const trend = m.priceChangePercent > 0 ? 'bullish' : m.priceChangePercent < 0 ? 'bearish' : 'neutral';
-              
+              const trend =
+                m.priceChangePercent > 0
+                  ? "bullish"
+                  : m.priceChangePercent < 0
+                    ? "bearish"
+                    : "neutral";
+
               // Calculate synthetic convergence metrics based on price movement and volume
-              const flowIntensity = roundToTwoDecimals(Math.min(100, absChange * 5));
-              const confluenceIntensity = roundToTwoDecimals(Math.min(100, (m.volume / 1000000) * 10));
-              const confidenceLevel = roundToTwoDecimals(Math.min(100, absChange * 3 + 50));
+              const flowIntensity = roundToTwoDecimals(
+                Math.min(100, absChange * 5),
+              );
+              const confluenceIntensity = roundToTwoDecimals(
+                Math.min(100, (m.volume / 1000000) * 10),
+              );
+              const confidenceLevel = roundToTwoDecimals(
+                Math.min(100, absChange * 3 + 50),
+              );
 
               return {
                 symbol: m.symbol,
-                name: m.symbol.replace('USDT', ''),
+                name: m.symbol.replace("USDT", ""),
                 price: roundToTwoDecimals(m.price),
                 flowIntensity,
                 confluenceIntensity,
@@ -66,18 +79,22 @@ export function useBubbleAssets() {
               };
             });
 
-          console.log(`[Bubble Assets] Created ${syntheticAssets.length} synthetic bubbles`);
-          return { 
-            assets: syntheticAssets, 
-            backendCount: 0, 
-            hasBackendData: false 
+          console.log(
+            `[Bubble Assets] Created ${syntheticAssets.length} synthetic bubbles`,
+          );
+          return {
+            assets: syntheticAssets,
+            backendCount: 0,
+            hasBackendData: false,
           };
         }
 
         // Enrich backend assets with live Binance data
         if (marketData.length > 0 && bubbleAssets.length > 0) {
-          const enrichedAssets = bubbleAssets.map(asset => {
-            const liveData = marketData.find(m => symbolsMatch(m.symbol, asset.symbol));
+          const enrichedAssets = bubbleAssets.map((asset) => {
+            const liveData = marketData.find((m) =>
+              symbolsMatch(m.symbol, asset.symbol),
+            );
             if (liveData) {
               return {
                 ...asset,
@@ -90,20 +107,20 @@ export function useBubbleAssets() {
             return asset;
           });
 
-          return { 
-            assets: enrichedAssets, 
-            backendCount, 
-            hasBackendData: true 
+          return {
+            assets: enrichedAssets,
+            backendCount,
+            hasBackendData: true,
           };
         }
 
-        return { 
-          assets: bubbleAssets, 
-          backendCount, 
-          hasBackendData: bubbleAssets.length > 0 
+        return {
+          assets: bubbleAssets,
+          backendCount,
+          hasBackendData: bubbleAssets.length > 0,
         };
       } catch (error) {
-        console.error('[Bubble Assets] Error fetching bubble assets:', error);
+        console.error("[Bubble Assets] Error fetching bubble assets:", error);
         return { assets: [], backendCount: 0, hasBackendData: false };
       }
     },

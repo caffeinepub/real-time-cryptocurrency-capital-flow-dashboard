@@ -3,9 +3,9 @@
  * Provides consistent framing with title, optional icon/badges, and content layout
  */
 
-import { ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LucideIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface OrderFlowSectionProps {
   title: string;
@@ -20,7 +20,7 @@ export default function OrderFlowSection({
   icon: Icon,
   badge,
   children,
-  className = '',
+  className = "",
 }: OrderFlowSectionProps) {
   return (
     <Card className={`terminal-panel ${className}`}>

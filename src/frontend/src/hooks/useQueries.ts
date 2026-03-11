@@ -1,19 +1,19 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import { useBinanceData } from './useBinanceData';
-import type { 
-  CapitalFlow, 
-  ConfluenceZone, 
-  CryptoAsset, 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type {
+  CapitalFlow,
+  ConfluenceZone,
+  CryptoAsset,
+  InstitutionalAlert,
   RecoveryAsset,
   Region,
-  RegionalFlow,
-  InstitutionalAlert,
   RegionalCorrelation,
-  RegionalMetric
-} from '../backend';
-import { roundToTwoDecimals } from '../lib/formatters';
-import { symbolsMatch, WHITELISTED_SYMBOLS } from '../lib/symbols';
+  RegionalFlow,
+  RegionalMetric,
+} from "../backend";
+import { roundToTwoDecimals } from "../lib/formatters";
+import { WHITELISTED_SYMBOLS, symbolsMatch } from "../lib/symbols";
+import { useActor } from "./useActor";
+import { useBinanceData } from "./useBinanceData";
 
 export interface EnrichedRegionalData {
   regionId: number;
@@ -38,17 +38,19 @@ export function useCapitalFlows() {
   const { marketData, isLive } = useBinanceData();
 
   return useQuery<CapitalFlow[]>({
-    queryKey: ['capitalFlows'],
+    queryKey: ["capitalFlows"],
     queryFn: async () => {
       if (!actor) return [];
-      
+
       try {
         const flows = await actor.getAllFlows();
-        
+
         // Enhance flows with live Binance data
         if (marketData.length > 0 && flows.length > 0) {
-          return flows.map(flow => {
-            const liveData = marketData.find(m => symbolsMatch(m.symbol, flow.toAsset.symbol));
+          return flows.map((flow) => {
+            const liveData = marketData.find((m) =>
+              symbolsMatch(m.symbol, flow.toAsset.symbol),
+            );
             if (liveData) {
               return {
                 ...flow,
@@ -56,16 +58,18 @@ export function useCapitalFlows() {
                   ...flow.toAsset,
                   usdValue: roundToTwoDecimals(liveData.price),
                 },
-                flowIntensity: roundToTwoDecimals(Math.min(1, Math.abs(liveData.priceChangePercent) / 10)),
+                flowIntensity: roundToTwoDecimals(
+                  Math.min(1, Math.abs(liveData.priceChangePercent) / 10),
+                ),
               };
             }
             return flow;
           });
         }
-        
+
         return flows;
       } catch (error) {
-        console.error('Error fetching capital flows:', error);
+        console.error("Error fetching capital flows:", error);
         return [];
       }
     },
@@ -81,40 +85,45 @@ export function useConfluenceZones() {
   const { marketData, isLive } = useBinanceData();
 
   return useQuery<ConfluenceZone[]>({
-    queryKey: ['confluenceZones'],
+    queryKey: ["confluenceZones"],
     queryFn: async () => {
       if (!actor) return [];
-      
+
       try {
         // Fetch confluence zones for each whitelisted symbol
         const zones: ConfluenceZone[] = [];
-        
+
         for (const symbol of WHITELISTED_SYMBOLS) {
           try {
             const zone = await actor.getConfluenceZone(symbol);
             zones.push(zone);
-          } catch (err) {
+          } catch (_err) {
             // Zone might not exist for this symbol, continue
           }
         }
-        
+
         // Enhance zones with live market volatility
         if (marketData.length > 0 && zones.length > 0) {
-          return zones.map(zone => {
+          return zones.map((zone) => {
             // Calculate average volatility from market data
-            const avgVolatility = marketData.reduce((sum, m) => 
-              sum + Math.abs(m.priceChangePercent), 0) / marketData.length;
-            
+            const avgVolatility =
+              marketData.reduce(
+                (sum, m) => sum + Math.abs(m.priceChangePercent),
+                0,
+              ) / marketData.length;
+
             return {
               ...zone,
-              intensity: roundToTwoDecimals(Math.min(1, zone.intensity * (1 + avgVolatility / 100))),
+              intensity: roundToTwoDecimals(
+                Math.min(1, zone.intensity * (1 + avgVolatility / 100)),
+              ),
             };
           });
         }
-        
+
         return zones;
       } catch (error) {
-        console.error('Error fetching confluence zones:', error);
+        console.error("Error fetching confluence zones:", error);
         return [];
       }
     },
@@ -130,45 +139,51 @@ export function useRecoveryAssets() {
   const { marketData, isLive } = useBinanceData();
 
   return useQuery<RecoveryAsset[]>({
-    queryKey: ['recoveryAssets'],
+    queryKey: ["recoveryAssets"],
     queryFn: async () => {
       if (!actor) return [];
-      
+
       try {
         // Fetch recovery assets for each whitelisted symbol
         const assets: RecoveryAsset[] = [];
-        
+
         for (const symbol of WHITELISTED_SYMBOLS) {
           try {
             const asset = await actor.getRecoveryAsset(symbol);
             assets.push(asset);
-          } catch (err) {
+          } catch (_err) {
             // Asset might not exist for this symbol, continue
           }
         }
-        
+
         // Enhance recovery assets with live Binance data
         if (marketData.length > 0 && assets.length > 0) {
-          return assets.map(asset => {
-            const liveData = marketData.find(m => symbolsMatch(m.symbol, asset.symbol));
+          return assets.map((asset) => {
+            const liveData = marketData.find((m) =>
+              symbolsMatch(m.symbol, asset.symbol),
+            );
             if (liveData) {
               // Adjust recovery strength based on live price change
-              const priceChangeBoost = liveData.priceChangePercent > 0 ? 
-                Math.min(0.2, liveData.priceChangePercent / 50) : 0;
-              
+              const priceChangeBoost =
+                liveData.priceChangePercent > 0
+                  ? Math.min(0.2, liveData.priceChangePercent / 50)
+                  : 0;
+
               return {
                 ...asset,
-                recoveryStrength: roundToTwoDecimals(Math.min(1, asset.recoveryStrength + priceChangeBoost)),
+                recoveryStrength: roundToTwoDecimals(
+                  Math.min(1, asset.recoveryStrength + priceChangeBoost),
+                ),
                 volume: roundToTwoDecimals(liveData.volume || asset.volume),
               };
             }
             return asset;
           });
         }
-        
+
         return assets;
       } catch (error) {
-        console.error('Error fetching recovery assets:', error);
+        console.error("Error fetching recovery assets:", error);
         return [];
       }
     },
@@ -184,27 +199,27 @@ export function useRegions() {
   const { actor, isFetching } = useActor();
 
   return useQuery<Region[]>({
-    queryKey: ['regions'],
+    queryKey: ["regions"],
     queryFn: async () => {
       if (!actor) return [];
-      
+
       try {
         // Fetch regions by known IDs
         const regionIds = [1, 2, 3, 4, 5, 6];
         const regions: Region[] = [];
-        
+
         for (const id of regionIds) {
           try {
             const region = await actor.getRegion(BigInt(id));
             regions.push(region);
-          } catch (err) {
+          } catch (_err) {
             // Region might not exist, continue
           }
         }
-        
+
         return regions;
       } catch (error) {
-        console.error('Error fetching regions:', error);
+        console.error("Error fetching regions:", error);
         return [];
       }
     },
@@ -218,16 +233,16 @@ export function useRegionalFlows() {
   const { actor, isFetching } = useActor();
 
   return useQuery<RegionalFlow[]>({
-    queryKey: ['regionalFlows'],
+    queryKey: ["regionalFlows"],
     queryFn: async () => {
       if (!actor) return [];
-      
+
       try {
         // Mock regional flows since backend doesn't have getRegionalFlow
         // In production, this would fetch from backend
         return [];
       } catch (error) {
-        console.error('Error fetching regional flows:', error);
+        console.error("Error fetching regional flows:", error);
         return [];
       }
     },
@@ -241,16 +256,16 @@ export function useInstitutionalAlerts() {
   const { actor, isFetching } = useActor();
 
   return useQuery<InstitutionalAlert[]>({
-    queryKey: ['institutionalAlerts'],
+    queryKey: ["institutionalAlerts"],
     queryFn: async () => {
       if (!actor) return [];
-      
+
       try {
         const alerts = await actor.getInstitutionalAlerts();
         // Sort by timestamp descending (most recent first)
         return alerts.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
       } catch (error) {
-        console.error('Error fetching institutional alerts:', error);
+        console.error("Error fetching institutional alerts:", error);
         return [];
       }
     },
@@ -264,15 +279,15 @@ export function useRegionalCorrelations() {
   const { actor, isFetching } = useActor();
 
   return useQuery<RegionalCorrelation[]>({
-    queryKey: ['regionalCorrelations'],
+    queryKey: ["regionalCorrelations"],
     queryFn: async () => {
       if (!actor) return [];
-      
+
       try {
         const correlations = await actor.getRegionalCorrelations();
         return correlations;
       } catch (error) {
-        console.error('Error fetching regional correlations:', error);
+        console.error("Error fetching regional correlations:", error);
         return [];
       }
     },
@@ -288,59 +303,75 @@ export function useEnrichedRegionalData() {
   const { data: regions = [] } = useRegions();
 
   return useQuery<EnrichedRegionalData[]>({
-    queryKey: ['enrichedRegionalData', regions.length],
+    queryKey: ["enrichedRegionalData", regions.length],
     queryFn: async () => {
       if (!actor || regions.length === 0) return [];
-      
+
       try {
         const enrichedData: EnrichedRegionalData[] = [];
-        
+
         for (const region of regions) {
           const regionId = Number(region.regionId);
-          
+
           // Fetch institutional metrics from backend
           let openInterestMetric: RegionalMetric | null = null;
           let fundingRateMetric: RegionalMetric | null = null;
           let exchangeVolumeMetric: RegionalMetric | null = null;
-          
+
           try {
-            openInterestMetric = await actor.getRegionalMetric(BigInt(regionId), 'openInterest');
-          } catch (err) {
+            openInterestMetric = await actor.getRegionalMetric(
+              BigInt(regionId),
+              "openInterest",
+            );
+          } catch (_err) {
             // Metric might not exist
           }
-          
+
           try {
-            fundingRateMetric = await actor.getRegionalMetric(BigInt(regionId), 'fundingRate');
-          } catch (err) {
+            fundingRateMetric = await actor.getRegionalMetric(
+              BigInt(regionId),
+              "fundingRate",
+            );
+          } catch (_err) {
             // Metric might not exist
           }
-          
+
           try {
-            exchangeVolumeMetric = await actor.getRegionalMetric(BigInt(regionId), 'exchangeVolume');
-          } catch (err) {
+            exchangeVolumeMetric = await actor.getRegionalMetric(
+              BigInt(regionId),
+              "exchangeVolume",
+            );
+          } catch (_err) {
             // Metric might not exist
           }
-          
+
           // Calculate enriched metrics
-          const openInterest = openInterestMetric ? openInterestMetric.value : 0;
+          const openInterest = openInterestMetric
+            ? openInterestMetric.value
+            : 0;
           const fundingRate = fundingRateMetric ? fundingRateMetric.value : 0;
-          const exchangeVolume = exchangeVolumeMetric ? exchangeVolumeMetric.value : 0;
-          
+          const exchangeVolume = exchangeVolumeMetric
+            ? exchangeVolumeMetric.value
+            : 0;
+
           // Calculate institutional flow intensity (normalized 0-1)
           const institutionalFlowIntensity = roundToTwoDecimals(
-            Math.min(1, (openInterest / 1000000) * 0.4 + (exchangeVolume / 5000000) * 0.6)
+            Math.min(
+              1,
+              (openInterest / 1000000) * 0.4 + (exchangeVolume / 5000000) * 0.6,
+            ),
           );
-          
+
           // Calculate funding bias (-1 to 1, negative = bearish, positive = bullish)
           const fundingBias = roundToTwoDecimals(
-            Math.max(-1, Math.min(1, fundingRate * 100))
+            Math.max(-1, Math.min(1, fundingRate * 100)),
           );
-          
+
           // Calculate aggregated interest trend (0-1)
           const aggregatedInterestTrend = roundToTwoDecimals(
-            Math.min(1, (openInterest / 800000) * 0.5 + region.intensity * 0.5)
+            Math.min(1, (openInterest / 800000) * 0.5 + region.intensity * 0.5),
           );
-          
+
           enrichedData.push({
             regionId,
             name: region.name,
@@ -358,10 +389,10 @@ export function useEnrichedRegionalData() {
             timestamp: region.timestamp,
           });
         }
-        
+
         return enrichedData;
       } catch (error) {
-        console.error('Error fetching enriched regional data:', error);
+        console.error("Error fetching enriched regional data:", error);
         return [];
       }
     },
@@ -377,18 +408,22 @@ export function useSyncBinanceData() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ symbol, price, volume }: { symbol: string; price: number; volume: number }) => {
-      if (!actor) throw new Error('Actor not initialized');
+    mutationFn: async ({
+      symbol,
+      price,
+      volume,
+    }: { symbol: string; price: number; volume: number }) => {
+      if (!actor) throw new Error("Actor not initialized");
 
       const usdAsset: CryptoAsset = {
-        symbol: 'USD',
-        name: 'US Dollar',
+        symbol: "USD",
+        name: "US Dollar",
         usdValue: 1.0,
       };
 
       const cryptoAsset: CryptoAsset = {
-        symbol: symbol.replace('USDT', ''),
-        name: symbol.replace('USDT', ''),
+        symbol: symbol.replace("USDT", ""),
+        name: symbol.replace("USDT", ""),
         usdValue: roundToTwoDecimals(price),
       };
 
@@ -401,11 +436,11 @@ export function useSyncBinanceData() {
         volume,
         intensity,
         0,
-        0
+        0,
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['capitalFlows'] });
+      queryClient.invalidateQueries({ queryKey: ["capitalFlows"] });
     },
   });
 }

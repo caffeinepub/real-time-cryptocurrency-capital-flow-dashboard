@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
-import LoginButton from '../components/LoginButton';
-import Footer from '../components/Footer';
-import OrderFlowMonitor from '../components/OrderFlowMonitor';
-import OrderFlowErrorBoundary from '../components/OrderFlowErrorBoundary';
-import { Activity } from 'lucide-react';
+import { Toaster } from "@/components/ui/sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Activity } from "lucide-react";
+import { ThemeProvider } from "next-themes";
+import { useState } from "react";
+import Footer from "../components/Footer";
+import LoginButton from "../components/LoginButton";
+import OrderFlowErrorBoundary from "../components/OrderFlowErrorBoundary";
+import OrderFlowMonitor from "../components/OrderFlowMonitor";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,7 +22,7 @@ export default function FuturesMonitorTabSurface() {
   const [resetKey, setResetKey] = useState(0);
 
   const handleReset = () => {
-    setResetKey(prev => prev + 1);
+    setResetKey((prev) => prev + 1);
   };
 
   return (
@@ -33,7 +33,9 @@ export default function FuturesMonitorTabSurface() {
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Activity className="w-6 h-6 text-neon-cyan" />
-                <h1 className="text-xl font-bold text-neon-cyan">Order Flow Monitor</h1>
+                <h1 className="text-xl font-bold text-neon-cyan">
+                  Order Flow Monitor
+                </h1>
               </div>
               <LoginButton />
             </div>

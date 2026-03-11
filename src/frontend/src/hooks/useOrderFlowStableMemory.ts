@@ -3,8 +3,8 @@
  * Provides ref-based internal memory that doesn't trigger React re-renders
  */
 
-import { useRef } from 'react';
-import { SpreadMetrics } from '../lib/bookConfluence';
+import { useRef } from "react";
+import type { SpreadMetrics } from "../lib/bookConfluence";
 
 export interface OrderFlowMemory {
   previousSpread: SpreadMetrics | null;
@@ -25,7 +25,8 @@ export interface OrderFlowMemoryHelpers {
   reset: () => void;
 }
 
-export function useOrderFlowStableMemory(): OrderFlowMemory & OrderFlowMemoryHelpers {
+export function useOrderFlowStableMemory(): OrderFlowMemory &
+  OrderFlowMemoryHelpers {
   const memoryRef = useRef<OrderFlowMemory>({
     previousSpread: null,
     previousStats: null,
@@ -74,14 +75,16 @@ export function useOrderFlowStableMemory(): OrderFlowMemory & OrderFlowMemoryHel
       if (memoryRef.current.avgVolume === 0) {
         memoryRef.current.avgVolume = currentVolume;
       } else {
-        memoryRef.current.avgVolume = memoryRef.current.avgVolume * 0.95 + currentVolume * 0.05;
+        memoryRef.current.avgVolume =
+          memoryRef.current.avgVolume * 0.95 + currentVolume * 0.05;
       }
     },
     updateAvgSpread: (currentSpread: number) => {
       if (memoryRef.current.avgSpread === 0) {
         memoryRef.current.avgSpread = currentSpread;
       } else {
-        memoryRef.current.avgSpread = memoryRef.current.avgSpread * 0.95 + currentSpread * 0.05;
+        memoryRef.current.avgSpread =
+          memoryRef.current.avgSpread * 0.95 + currentSpread * 0.05;
       }
     },
 

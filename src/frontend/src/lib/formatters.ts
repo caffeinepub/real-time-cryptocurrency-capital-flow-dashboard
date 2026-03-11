@@ -6,9 +6,9 @@
  * @param decimals - Number of decimal places (default: 2, max: 2)
  * @returns Formatted string with comma as decimal separator
  */
-export function formatNumber(value: number, decimals: number = 2): string {
+export function formatNumber(value: number, decimals = 2): string {
   const maxDecimals = Math.min(decimals, 2);
-  return value.toLocaleString('pt-BR', {
+  return value.toLocaleString("pt-BR", {
     minimumFractionDigits: maxDecimals,
     maximumFractionDigits: maxDecimals,
   });
@@ -29,7 +29,7 @@ export function formatCurrency(value: number): string {
  * @param includeSymbol - Whether to include the % symbol (default: true)
  * @returns Formatted percentage string
  */
-export function formatPercentage(value: number, includeSymbol: boolean = true): string {
+export function formatPercentage(value: number, includeSymbol = true): string {
   const percentage = value * 100;
   const formatted = formatNumber(percentage, 2);
   return includeSymbol ? `${formatted}%` : formatted;

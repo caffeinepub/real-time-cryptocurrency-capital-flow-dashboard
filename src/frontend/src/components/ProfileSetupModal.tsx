@@ -1,20 +1,26 @@
-import { useState } from 'react';
-import { useSaveCallerUserProfile } from '../hooks/useBinanceFuturesMonitor';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { User, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, User } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useSaveCallerUserProfile } from "../hooks/useBinanceFuturesMonitor";
 
 export default function ProfileSetupModal() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const saveMutation = useSaveCallerUserProfile();
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast.error('Please enter your name');
+      toast.error("Please enter your name");
       return;
     }
 
@@ -24,9 +30,9 @@ export default function ProfileSetupModal() {
         email: email.trim() || undefined,
         preferences: undefined,
       });
-      toast.success('Profile created successfully');
+      toast.success("Profile created successfully");
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create profile');
+      toast.error(error.message || "Failed to create profile");
     }
   };
 
@@ -62,7 +68,8 @@ export default function ProfileSetupModal() {
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
-              Email <span className="text-muted-foreground text-xs">(optional)</span>
+              Email{" "}
+              <span className="text-muted-foreground text-xs">(optional)</span>
             </Label>
             <Input
               id="email"
@@ -86,7 +93,7 @@ export default function ProfileSetupModal() {
                 Creating Profile...
               </>
             ) : (
-              'Create Profile'
+              "Create Profile"
             )}
           </Button>
         </div>

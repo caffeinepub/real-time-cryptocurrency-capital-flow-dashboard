@@ -1,26 +1,26 @@
 /**
  * React hook for Binance Order Flow data
  * Manages polling and state for order flow analysis
- * 
+ *
  * CONTRACT: This hook performs ONLY public market data fetching.
  * It does NOT depend on Binance credentials and must never read/send API keys.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from "react";
 import {
+  type BookTicker,
+  type MarketType,
+  type RecentTrade,
+  type Ticker24h,
   fetch24hTicker,
-  fetchRecentTrades,
   fetchBookTicker,
-  MarketType,
-  Ticker24h,
-  RecentTrade,
-  BookTicker,
-} from '../lib/binanceOrderFlowRest';
+  fetchRecentTrades,
+} from "../lib/binanceOrderFlowRest";
 import {
-  generateOrderFlowFingerprint,
+  type OrderFlowFingerprint,
   fingerprintsEqual,
-  OrderFlowFingerprint,
-} from '../lib/orderFlowFingerprint';
+  generateOrderFlowFingerprint,
+} from "../lib/orderFlowFingerprint";
 
 export interface OrderFlowData {
   ticker: Ticker24h | null;
@@ -42,9 +42,11 @@ export interface UseOrderFlowResult {
   refetch: () => void;
 }
 
-const DEFAULT_SYMBOL = 'BTCUSDT';
+const DEFAULT_SYMBOL = "BTCUSDT";
 
-export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowResult {
+export function useBinanceOrderFlow(
+  options: UseOrderFlowOptions,
+): UseOrderFlowResult {
   const { market, pollingInterval = 3000, enabled = true } = options;
 
   const [data, setData] = useState<OrderFlowData | null>(null);
@@ -59,7 +61,7 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
   const isInitialLoadRef = useRef(true);
   const isManualRefetchRef = useRef(false);
 
-  const fetchData = async (isManualRefetch: boolean = false) => {
+  const fetchData = async (isManualRefetch = false) => {
     if (!enabled) return;
 
     // Cancel previous request
@@ -90,7 +92,7 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
 
       // Validate that we have at least some data
       if (!ticker && trades.length === 0 && !book) {
-        throw new Error('No data available from Binance API');
+        throw new Error("No data available from Binance API");
       }
 
       const newData: OrderFlowData = {
@@ -113,11 +115,11 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
       setError(null);
       isInitialLoadRef.current = false;
     } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.error('Error fetching order flow data:', err);
+      if (err.name !== "AbortError") {
+        console.error("Error fetching order flow data:", err);
         // Only set error on initial load or manual refetch
         if (isInitialLoadRef.current || isManualRefetch) {
-          setError(err.message || 'Error fetching order flow data');
+          setError(err.message || "Error fetching order flow data");
         }
       }
     } finally {
@@ -136,6 +138,7 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
   };
 
   // Initial fetch and polling
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refs are stable
   useEffect(() => {
     if (!enabled) {
       // When disabled, stop polling but keep existing data
@@ -154,7 +157,10 @@ export function useBinanceOrderFlow(options: UseOrderFlowOptions): UseOrderFlowR
     fetchData(false);
 
     if (pollingInterval > 0) {
-      intervalRef.current = setInterval(() => fetchData(false), pollingInterval);
+      intervalRef.current = setInterval(
+        () => fetchData(false),
+        pollingInterval,
+      );
     }
 
     return () => {

@@ -3,93 +3,100 @@
  * Real-time BTC order flow analysis with improved UX, clear sections, and English copy
  */
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useBinanceOrderFlow } from '../hooks/useBinanceOrderFlow';
-import { useOrderFlowStableMemory } from '../hooks/useOrderFlowStableMemory';
-import { MarketType } from '../lib/binanceOrderFlowRest';
-import {
-  classifyTrades,
-  calculateRollingStats,
-  detectLargeTradeCluster,
-  OrderFlowThresholds,
-} from '../lib/orderFlowAnalysis';
-import {
-  calculateSpreadMetrics,
-  determineBookDirection,
-  detectConfluenceEvents,
-  ConfluenceEvent,
-  ConfluenceThresholds,
-} from '../lib/bookConfluence';
-import {
-  generateProxyLiquidationAlert,
-  generateVolumeSpikeAlert,
-  generateSpreadAnomalyAlert,
-  OrderFlowAlert,
-  AlertThresholds,
-} from '../lib/orderFlowAlerts';
-import {
-  safeJsonParse,
-  validateOrderFlowThresholds,
-  validateConfluenceThresholds,
-  validateAlertThresholds,
-} from '../utils/safeJson';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   Activity,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  Lock,
-  Database,
-  Zap,
   BarChart3,
-} from 'lucide-react';
-import OrderFlowSection from './order-flow/OrderFlowSection';
-import OrderFlowStatGrid from './order-flow/OrderFlowStatGrid';
-import OrderFlowControlsBar from './order-flow/OrderFlowControlsBar';
-import AlertsPanel from './order-flow/AlertsPanel';
-import ConfluencePanel from './order-flow/ConfluencePanel';
-import { COPY } from './order-flow/orderFlowCopy';
+  Database,
+  Lock,
+  TrendingDown,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useBinanceOrderFlow } from "../hooks/useBinanceOrderFlow";
+import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useOrderFlowStableMemory } from "../hooks/useOrderFlowStableMemory";
+import type { MarketType } from "../lib/binanceOrderFlowRest";
+import {
+  type ConfluenceEvent,
+  type ConfluenceThresholds,
+  calculateSpreadMetrics,
+  detectConfluenceEvents,
+  determineBookDirection,
+} from "../lib/bookConfluence";
+import {
+  type AlertThresholds,
+  type OrderFlowAlert,
+  generateProxyLiquidationAlert,
+  generateSpreadAnomalyAlert,
+  generateVolumeSpikeAlert,
+} from "../lib/orderFlowAlerts";
+import {
+  type OrderFlowThresholds,
+  calculateRollingStats,
+  classifyTrades,
+  detectLargeTradeCluster,
+} from "../lib/orderFlowAnalysis";
+import {
+  safeJsonParse,
+  validateAlertThresholds,
+  validateConfluenceThresholds,
+  validateOrderFlowThresholds,
+} from "../utils/safeJson";
+import AlertsPanel from "./order-flow/AlertsPanel";
+import ConfluencePanel from "./order-flow/ConfluencePanel";
+import OrderFlowControlsBar from "./order-flow/OrderFlowControlsBar";
+import OrderFlowSection from "./order-flow/OrderFlowSection";
+import OrderFlowStatGrid from "./order-flow/OrderFlowStatGrid";
+import { COPY } from "./order-flow/orderFlowCopy";
 
 export default function OrderFlowMonitor() {
   const { identity, isInitializing } = useInternetIdentity();
   const isAuthenticated = !!identity;
 
   // Market selection
-  const [market, setMarket] = useState<MarketType>('futures');
+  const [market, setMarket] = useState<MarketType>("futures");
 
   // Polling configuration
   const [pollingInterval, setPollingInterval] = useState(3000);
   const [enabled, setEnabled] = useState(true);
 
   // Order flow thresholds (persisted in localStorage with safe parsing)
-  const [flowThresholds, setFlowThresholds] = useState<OrderFlowThresholds>(() => {
-    const saved = localStorage.getItem('orderFlowThresholds');
-    const parsed = safeJsonParse(saved, null);
-    return validateOrderFlowThresholds(parsed);
-  });
+  const [flowThresholds, setFlowThresholds] = useState<OrderFlowThresholds>(
+    () => {
+      const saved = localStorage.getItem("orderFlowThresholds");
+      const parsed = safeJsonParse(saved, null);
+      return validateOrderFlowThresholds(parsed);
+    },
+  );
 
   // Confluence thresholds (safe parsing)
-  const [confluenceThresholds, setConfluenceThresholds] = useState<ConfluenceThresholds>(() => {
-    const saved = localStorage.getItem('confluenceThresholds');
-    const parsed = safeJsonParse(saved, null);
-    return validateConfluenceThresholds(parsed);
-  });
+  const [confluenceThresholds, setConfluenceThresholds] =
+    useState<ConfluenceThresholds>(() => {
+      const saved = localStorage.getItem("confluenceThresholds");
+      const parsed = safeJsonParse(saved, null);
+      return validateConfluenceThresholds(parsed);
+    });
 
   // Alert thresholds (safe parsing)
-  const [alertThresholds, setAlertThresholds] = useState<AlertThresholds>(() => {
-    const saved = localStorage.getItem('alertThresholds');
-    const parsed = safeJsonParse(saved, null);
-    return validateAlertThresholds(parsed);
-  });
+  const [alertThresholds, _setAlertThresholds] = useState<AlertThresholds>(
+    () => {
+      const saved = localStorage.getItem("alertThresholds");
+      const parsed = safeJsonParse(saved, null);
+      return validateAlertThresholds(parsed);
+    },
+  );
 
   // State for confluence and alerts (only for display)
-  const [confluenceEvents, setConfluenceEvents] = useState<ConfluenceEvent[]>([]);
+  const [confluenceEvents, setConfluenceEvents] = useState<ConfluenceEvent[]>(
+    [],
+  );
   const [alerts, setAlerts] = useState<OrderFlowAlert[]>([]);
 
   // Stable memory (refs) for internal tracking without re-renders
@@ -110,6 +117,7 @@ export default function OrderFlowMonitor() {
   });
 
   // Reset memory when market changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: memory is stable ref
   useEffect(() => {
     memory.reset();
     setConfluenceEvents([]);
@@ -121,29 +129,36 @@ export default function OrderFlowMonitor() {
   // Persist thresholds (safe)
   useEffect(() => {
     try {
-      localStorage.setItem('orderFlowThresholds', JSON.stringify(flowThresholds));
-    } catch (e) {
-      console.warn('Failed to save orderFlowThresholds to localStorage');
+      localStorage.setItem(
+        "orderFlowThresholds",
+        JSON.stringify(flowThresholds),
+      );
+    } catch (_e) {
+      console.warn("Failed to save orderFlowThresholds to localStorage");
     }
   }, [flowThresholds]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('confluenceThresholds', JSON.stringify(confluenceThresholds));
-    } catch (e) {
-      console.warn('Failed to save confluenceThresholds to localStorage');
+      localStorage.setItem(
+        "confluenceThresholds",
+        JSON.stringify(confluenceThresholds),
+      );
+    } catch (_e) {
+      console.warn("Failed to save confluenceThresholds to localStorage");
     }
   }, [confluenceThresholds]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('alertThresholds', JSON.stringify(alertThresholds));
-    } catch (e) {
-      console.warn('Failed to save alertThresholds to localStorage');
+      localStorage.setItem("alertThresholds", JSON.stringify(alertThresholds));
+    } catch (_e) {
+      console.warn("Failed to save alertThresholds to localStorage");
     }
   }, [alertThresholds]);
 
   // Analyze order flow with defensive guards
+  // biome-ignore lint/correctness/useExhaustiveDependencies: memory is stable ref
   const analysis = useMemo(() => {
     if (!data) return null;
 
@@ -153,8 +168,8 @@ export default function OrderFlowMonitor() {
 
     const bookTicker =
       data.bookTicker &&
-      typeof data.bookTicker.bidPrice === 'string' &&
-      typeof data.bookTicker.askPrice === 'string'
+      typeof data.bookTicker.bidPrice === "string" &&
+      typeof data.bookTicker.askPrice === "string"
         ? data.bookTicker
         : null;
 
@@ -163,7 +178,11 @@ export default function OrderFlowMonitor() {
       const stats = calculateRollingStats(classifications, flowThresholds);
       const hasCluster = detectLargeTradeCluster(classifications);
       const currentSpread = calculateSpreadMetrics(bookTicker);
-      const direction = determineBookDirection(currentSpread, memory.previousSpread, 0.01);
+      const direction = determineBookDirection(
+        currentSpread,
+        memory.previousSpread,
+        0.01,
+      );
 
       return {
         classifications,
@@ -173,12 +192,13 @@ export default function OrderFlowMonitor() {
         direction,
       };
     } catch (err) {
-      console.error('Error analyzing order flow:', err);
+      console.error("Error analyzing order flow:", err);
       return null;
     }
   }, [data, flowThresholds]);
 
   // Update confluence events and alerts (single effect, no feedback loops)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: memory is stable ref
   useEffect(() => {
     if (!analysis || !analysis.currentSpread) return;
 
@@ -190,11 +210,13 @@ export default function OrderFlowMonitor() {
         memory.previousSpread,
         analysis.direction,
         confluenceThresholds,
-        prevConfluenceRef.current
+        prevConfluenceRef.current,
       );
 
       // Only update state if events actually changed
-      if (JSON.stringify(newEvents) !== JSON.stringify(prevConfluenceRef.current)) {
+      if (
+        JSON.stringify(newEvents) !== JSON.stringify(prevConfluenceRef.current)
+      ) {
         setConfluenceEvents(newEvents);
         prevConfluenceRef.current = newEvents;
       }
@@ -204,7 +226,8 @@ export default function OrderFlowMonitor() {
 
       // Generate alerts
       const currentPrice = analysis.currentSpread.midPrice;
-      const currentVolume = analysis.stats.totalBuyNotional + analysis.stats.totalSellNotional;
+      const currentVolume =
+        analysis.stats.totalBuyNotional + analysis.stats.totalSellNotional;
 
       // Update rolling averages in memory (no re-render)
       memory.updateAvgVolume(currentVolume);
@@ -217,17 +240,21 @@ export default function OrderFlowMonitor() {
         memory.previousStats,
         currentPrice,
         memory.previousPrice,
-        alertThresholds
+        alertThresholds,
       );
       if (liquidationAlert) newAlerts.push(liquidationAlert);
 
-      const volumeAlert = generateVolumeSpikeAlert(analysis.stats, memory.avgVolume, alertThresholds);
+      const volumeAlert = generateVolumeSpikeAlert(
+        analysis.stats,
+        memory.avgVolume,
+        alertThresholds,
+      );
       if (volumeAlert) newAlerts.push(volumeAlert);
 
       const spreadAlert = generateSpreadAnomalyAlert(
         analysis.currentSpread,
         memory.avgSpread,
-        alertThresholds
+        alertThresholds,
       );
       if (spreadAlert) newAlerts.push(spreadAlert);
 
@@ -244,7 +271,7 @@ export default function OrderFlowMonitor() {
       memory.setPreviousStats(analysis.stats);
       memory.setPreviousPrice(currentPrice);
     } catch (err) {
-      console.error('Error processing order flow analysis:', err);
+      console.error("Error processing order flow analysis:", err);
     }
   }, [analysis, confluenceThresholds, alertThresholds]);
 
@@ -253,7 +280,7 @@ export default function OrderFlowMonitor() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin mx-auto"></div>
+          <div className="w-12 h-12 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin mx-auto" />
           <p className="text-muted-foreground">{COPY.loading}</p>
         </div>
       </div>
@@ -269,7 +296,9 @@ export default function OrderFlowMonitor() {
             <Lock className="w-10 h-10 text-neon-yellow" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-neon-yellow">{COPY.authRequired}</h2>
+            <h2 className="text-2xl font-bold text-neon-yellow">
+              {COPY.authRequired}
+            </h2>
             <p className="text-muted-foreground">{COPY.authMessage}</p>
           </div>
         </div>
@@ -278,9 +307,9 @@ export default function OrderFlowMonitor() {
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
@@ -324,7 +353,8 @@ export default function OrderFlowMonitor() {
         <div>
           <h2 className="text-2xl font-bold text-neon-yellow">{COPY.title}</h2>
           <p className="text-sm text-muted-foreground">
-            {COPY.subtitle} - {market === 'futures' ? COPY.marketFutures : COPY.marketSpot}
+            {COPY.subtitle} -{" "}
+            {market === "futures" ? COPY.marketFutures : COPY.marketSpot}
           </p>
         </div>
       </div>
@@ -344,7 +374,11 @@ export default function OrderFlowMonitor() {
 
       {/* Settings Panel */}
       {showSettings && (
-        <OrderFlowSection title={COPY.analysisSettings} icon={Activity} className="border-neon-cyan/30">
+        <OrderFlowSection
+          title={COPY.analysisSettings}
+          icon={Activity}
+          className="border-neon-cyan/30"
+        >
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
@@ -425,7 +459,9 @@ export default function OrderFlowMonitor() {
                 <Input
                   type="number"
                   value={pollingInterval}
-                  onChange={(e) => setPollingInterval(Math.max(1000, Number(e.target.value)))}
+                  onChange={(e) =>
+                    setPollingInterval(Math.max(1000, Number(e.target.value)))
+                  }
                   className="terminal-input"
                   min={1000}
                   step={1000}
@@ -455,7 +491,7 @@ export default function OrderFlowMonitor() {
                   label: COPY.currentPrice,
                   value: data.ticker ? (
                     <span className="text-neon-cyan">
-                      ${parseFloat(data.ticker.lastPrice).toFixed(2)}
+                      ${Number.parseFloat(data.ticker.lastPrice).toFixed(2)}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">--</span>
@@ -475,7 +511,9 @@ export default function OrderFlowMonitor() {
                   label: COPY.volume24h,
                   value: data.ticker ? (
                     <span className="text-neon-green">
-                      {formatCurrency(parseFloat(data.ticker.quoteVolume))}
+                      {formatCurrency(
+                        Number.parseFloat(data.ticker.quoteVolume),
+                      )}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">--</span>
@@ -492,12 +530,20 @@ export default function OrderFlowMonitor() {
               stats={[
                 {
                   label: COPY.buyFlow,
-                  value: <span className="text-neon-green">{formatCurrency(analysis.stats.totalBuyNotional)}</span>,
+                  value: (
+                    <span className="text-neon-green">
+                      {formatCurrency(analysis.stats.totalBuyNotional)}
+                    </span>
+                  ),
                   icon: <TrendingUp className="w-4 h-4 text-neon-green" />,
                 },
                 {
                   label: COPY.sellFlow,
-                  value: <span className="text-neon-pink">{formatCurrency(analysis.stats.totalSellNotional)}</span>,
+                  value: (
+                    <span className="text-neon-pink">
+                      {formatCurrency(analysis.stats.totalSellNotional)}
+                    </span>
+                  ),
                   icon: <TrendingDown className="w-4 h-4 text-neon-pink" />,
                 },
                 {
@@ -506,10 +552,10 @@ export default function OrderFlowMonitor() {
                     <span
                       className={
                         analysis.stats.netDelta > 0
-                          ? 'text-neon-green'
+                          ? "text-neon-green"
                           : analysis.stats.netDelta < 0
-                          ? 'text-neon-pink'
-                          : 'text-muted-foreground'
+                            ? "text-neon-pink"
+                            : "text-muted-foreground"
                       }
                     >
                       {formatCurrency(analysis.stats.netDelta)}
@@ -522,10 +568,10 @@ export default function OrderFlowMonitor() {
                     <span
                       className={
                         calculateImbalancePercent(analysis.stats) > 0
-                          ? 'text-neon-green'
+                          ? "text-neon-green"
                           : calculateImbalancePercent(analysis.stats) < 0
-                          ? 'text-neon-pink'
-                          : 'text-muted-foreground'
+                            ? "text-neon-pink"
+                            : "text-muted-foreground"
                       }
                     >
                       {calculateImbalancePercent(analysis.stats).toFixed(1)}%
@@ -543,7 +589,9 @@ export default function OrderFlowMonitor() {
                   </span>
                   <Zap className="w-4 h-4 text-neon-yellow" />
                 </div>
-                <div className="text-xl font-bold">{analysis.stats.largeTradeCount}</div>
+                <div className="text-xl font-bold">
+                  {analysis.stats.largeTradeCount}
+                </div>
               </div>
 
               <div className="p-4 rounded-lg border border-border/50 bg-muted/20">
@@ -554,9 +602,13 @@ export default function OrderFlowMonitor() {
                 </div>
                 <div className="text-xl font-bold">
                   {analysis.hasCluster ? (
-                    <span className="text-neon-pink">{COPY.clusterDetected}</span>
+                    <span className="text-neon-pink">
+                      {COPY.clusterDetected}
+                    </span>
                   ) : (
-                    <span className="text-muted-foreground">{COPY.noCluster}</span>
+                    <span className="text-muted-foreground">
+                      {COPY.noCluster}
+                    </span>
                   )}
                 </div>
               </div>

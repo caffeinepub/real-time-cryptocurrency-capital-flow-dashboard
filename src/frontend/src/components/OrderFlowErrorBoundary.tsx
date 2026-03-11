@@ -3,12 +3,12 @@
  * Catches runtime errors and displays a user-friendly fallback UI with retry action (English copy)
  */
 
-import { Component, ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { COPY } from './order-flow/orderFlowCopy';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Component, type ReactNode } from "react";
+import { COPY } from "./order-flow/orderFlowCopy";
 
 interface Props {
   children: ReactNode;
@@ -31,7 +31,7 @@ export default class OrderFlowErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('OrderFlowMonitor error:', error, errorInfo);
+    console.error("OrderFlowMonitor error:", error, errorInfo);
   }
 
   handleReset = () => {
@@ -55,7 +55,9 @@ export default class OrderFlowErrorBoundary extends Component<Props, State> {
             <CardContent className="space-y-4">
               <Alert className="border-neon-pink/30 bg-neon-pink/5">
                 <AlertTriangle className="h-4 w-4 text-neon-pink" />
-                <AlertDescription className="text-sm">{COPY.errorProcessing} {COPY.errorCause}</AlertDescription>
+                <AlertDescription className="text-sm">
+                  {COPY.errorProcessing} {COPY.errorCause}
+                </AlertDescription>
               </Alert>
 
               {this.state.error && (
@@ -88,8 +90,8 @@ export default class OrderFlowErrorBoundary extends Component<Props, State> {
                   <strong>{COPY.troubleshooting}</strong>
                 </p>
                 <ul className="text-xs text-muted-foreground list-disc list-inside space-y-1 mt-2">
-                  {COPY.troubleshootingTips.map((tip, index) => (
-                    <li key={index}>{tip}</li>
+                  {COPY.troubleshootingTips.map((tip) => (
+                    <li key={tip}>{tip}</li>
                   ))}
                 </ul>
               </div>

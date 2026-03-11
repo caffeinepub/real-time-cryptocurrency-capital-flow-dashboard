@@ -3,12 +3,12 @@
  * Displays detected confluence events with distinct styling from alerts
  */
 
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Target, TrendingUp, TrendingDown } from 'lucide-react';
-import { ConfluenceEvent } from '../../lib/bookConfluence';
-import OrderFlowSection from './OrderFlowSection';
-import { COPY } from './orderFlowCopy';
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Target, TrendingDown, TrendingUp } from "lucide-react";
+import type { ConfluenceEvent } from "../../lib/bookConfluence";
+import OrderFlowSection from "./OrderFlowSection";
+import { COPY } from "./orderFlowCopy";
 
 interface ConfluencePanelProps {
   events: ConfluenceEvent[];
@@ -16,28 +16,29 @@ interface ConfluencePanelProps {
 
 export default function ConfluencePanel({ events }: ConfluencePanelProps) {
   const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
+    return new Date(timestamp).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
   };
 
   const getDirectionIcon = (description: string) => {
-    if (description.includes('compra') || description.includes('buy')) {
+    if (description.includes("compra") || description.includes("buy")) {
       return <TrendingUp className="w-4 h-4 text-neon-green" />;
     }
-    if (description.includes('venda') || description.includes('sell')) {
+    if (description.includes("venda") || description.includes("sell")) {
       return <TrendingDown className="w-4 h-4 text-neon-pink" />;
     }
     return <Target className="w-4 h-4 text-neon-cyan" />;
   };
 
-  const badge = events.length > 0 ? (
-    <Badge variant="outline" className="text-neon-cyan border-neon-cyan/50">
-      {events.length}
-    </Badge>
-  ) : null;
+  const badge =
+    events.length > 0 ? (
+      <Badge variant="outline" className="text-neon-cyan border-neon-cyan/50">
+        {events.length}
+      </Badge>
+    ) : null;
 
   return (
     <OrderFlowSection title={COPY.confluenceEvents} icon={Target} badge={badge}>
@@ -51,20 +52,29 @@ export default function ConfluencePanel({ events }: ConfluencePanelProps) {
           <div className="space-y-3">
             {events.map((event, index) => (
               <div
-                key={index}
+                key={`${event.type}-${index}`}
                 className="p-3 rounded-lg border border-neon-cyan/30 bg-neon-cyan/5"
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     {getDirectionIcon(event.description)}
-                    <span className="font-semibold text-sm text-neon-cyan">{event.type}</span>
+                    <span className="font-semibold text-sm text-neon-cyan">
+                      {event.type}
+                    </span>
                   </div>
-                  <Badge variant="outline" className="text-xs text-neon-cyan border-neon-cyan/50">
+                  <Badge
+                    variant="outline"
+                    className="text-xs text-neon-cyan border-neon-cyan/50"
+                  >
                     {event.severity}
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mb-2">{event.description}</p>
-                <span className="text-xs text-muted-foreground">{formatTime(event.timestamp)}</span>
+                <p className="text-xs text-muted-foreground mb-2">
+                  {event.description}
+                </p>
+                <span className="text-xs text-muted-foreground">
+                  {formatTime(event.timestamp)}
+                </span>
               </div>
             ))}
           </div>

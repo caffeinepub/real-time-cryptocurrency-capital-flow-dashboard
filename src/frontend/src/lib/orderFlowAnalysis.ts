@@ -3,11 +3,11 @@
  * Analyzes trade data to identify institutional activity and market imbalances
  */
 
-import { RecentTrade } from './binanceOrderFlowRest';
+import type { RecentTrade } from "./binanceOrderFlowRest";
 
 export interface TradeClassification {
   trade: RecentTrade;
-  side: 'buy' | 'sell';
+  side: "buy" | "sell";
   notional: number;
   isLarge: boolean;
 }
@@ -35,15 +35,15 @@ export interface OrderFlowThresholds {
  * isBuyerMaker=true means buyer is maker (passive) -> sell side aggression
  * isBuyerMaker=false means buyer is taker (aggressive) -> buy side aggression
  */
-export function classifyTradeSide(trade: RecentTrade): 'buy' | 'sell' {
-  return trade.isBuyerMaker ? 'sell' : 'buy';
+export function classifyTradeSide(trade: RecentTrade): "buy" | "sell" {
+  return trade.isBuyerMaker ? "sell" : "buy";
 }
 
 /**
  * Calculate trade notional value (price * quantity)
  */
 export function calculateNotional(trade: RecentTrade): number {
-  return parseFloat(trade.price) * parseFloat(trade.qty);
+  return Number.parseFloat(trade.price) * Number.parseFloat(trade.qty);
 }
 
 /**
@@ -51,9 +51,9 @@ export function calculateNotional(trade: RecentTrade): number {
  */
 export function classifyTrades(
   trades: RecentTrade[],
-  thresholds: OrderFlowThresholds
+  thresholds: OrderFlowThresholds,
 ): TradeClassification[] {
-  return trades.map(trade => {
+  return trades.map((trade) => {
     const notional = calculateNotional(trade);
     return {
       trade,
@@ -70,7 +70,7 @@ export function classifyTrades(
  */
 export function calculateRollingStats(
   classifications: TradeClassification[],
-  thresholds: OrderFlowThresholds
+  thresholds: OrderFlowThresholds,
 ): RollingWindowStats {
   if (classifications.length === 0) {
     return {
@@ -87,15 +87,21 @@ export function calculateRollingStats(
   }
 
   // Get window by trade count
-  const windowByCount = classifications.slice(0, thresholds.rollingWindowTrades);
-  
+  const windowByCount = classifications.slice(
+    0,
+    thresholds.rollingWindowTrades,
+  );
+
   // Get window by time
   const now = Date.now();
   const windowMs = thresholds.rollingWindowMinutes * 60 * 1000;
-  const windowByTime = classifications.filter(c => now - c.trade.time < windowMs);
-  
+  const windowByTime = classifications.filter(
+    (c) => now - c.trade.time < windowMs,
+  );
+
   // Use the smaller window
-  const window = windowByCount.length < windowByTime.length ? windowByCount : windowByTime;
+  const window =
+    windowByCount.length < windowByTime.length ? windowByCount : windowByTime;
 
   let totalBuyNotional = 0;
   let totalSellNotional = 0;
@@ -103,8 +109,8 @@ export function calculateRollingStats(
   let sellCount = 0;
   let largeTradeCount = 0;
 
-  window.forEach(c => {
-    if (c.side === 'buy') {
+  for (const c of window) {
+    if (c.side === "buy") {
       totalBuyNotional += c.notional;
       buyCount++;
     } else {
@@ -112,7 +118,7 @@ export function calculateRollingStats(
       sellCount++;
     }
     if (c.isLarge) largeTradeCount++;
-  });
+  }
 
   const netDelta = totalBuyNotional - totalSellNotional;
   const totalNotional = totalBuyNotional + totalSellNotional;
@@ -137,15 +143,16 @@ export function calculateRollingStats(
  */
 export function detectLargeTradeCluster(
   classifications: TradeClassification[],
-  clusterWindow: number = 60000, // 1 minute
-  minClusterSize: number = 3
+  clusterWindow = 60000, // 1 minute
+  minClusterSize = 3,
 ): boolean {
-  const largeTrades = classifications.filter(c => c.isLarge);
+  const largeTrades = classifications.filter((c) => c.isLarge);
   if (largeTrades.length < minClusterSize) return false;
 
   // Check if first N large trades are within cluster window
   const recentLarge = largeTrades.slice(0, minClusterSize);
-  const timeSpan = recentLarge[0].trade.time - recentLarge[minClusterSize - 1].trade.time;
-  
+  const timeSpan =
+    recentLarge[0].trade.time - recentLarge[minClusterSize - 1].trade.time;
+
   return timeSpan <= clusterWindow;
 }
